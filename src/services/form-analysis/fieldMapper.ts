@@ -1,5 +1,5 @@
 import knowledgeBaseData from '@/data/knowledge-base.json';
-import { KnowledgeField, DetectedField } from '@/types/form';
+import { KnowledgeField, DetectedField, BoundingBox } from '@/types/form';
 
 const knowledgeFields = knowledgeBaseData.fields as Record<string, KnowledgeField>;
 
@@ -7,8 +7,9 @@ export interface RawOcrItem {
   text: string;
   confidence: number;
   box?: number[][];
-  boundingBoxPixel?: { x: number; y: number; width: number; height: number };
-  boundingBoxPercent?: { x: number; y: number; width: number; height: number };
+  labelBoxPercent?: BoundingBox;
+  inputBoxPercent?: BoundingBox;
+  boundingBoxPercent?: BoundingBox;
 }
 
 export function mapOcrToDetectedFields(
@@ -18,7 +19,7 @@ export function mapOcrToDetectedFields(
   const detectedFields: DetectedField[] = [];
   const processedFieldIds = new Set<string>();
 
-  // 1. Process REAL OCR items returned from PaddleOCR / Backend OCR
+  // 1. Process REAL OCR items with Label vs Input Area Spatial Analysis
   if (ocrItems && ocrItems.length > 0) {
     for (const item of ocrItems) {
       const textRaw = item.text || '';
@@ -27,7 +28,7 @@ export function mapOcrToDetectedFields(
 
       let matchedFieldId: string | null = null;
 
-      // Find matching field in Knowledge Base
+      // Match text against knowledge base aliases
       for (const [fieldId, kField] of Object.entries(knowledgeFields)) {
         if (processedFieldIds.has(fieldId)) continue;
 
@@ -38,17 +39,17 @@ export function mapOcrToDetectedFields(
         }
       }
 
-      // Convert confidence to integer percentage (0 - 100)
       const rawConf = item.confidence > 1 ? item.confidence : item.confidence * 100;
       const confPercent = Math.min(100, Math.max(1, Math.round(rawConf)));
 
-      // Extract percentage bounding box coordinates
-      const boxPercent = item.boundingBoxPercent || {
-        x: 10,
-        y: 20,
-        width: 80,
-        height: 8
-      };
+      // Determine confidence level
+      let confidenceLevel: 'High confidence' | 'Medium confidence' | 'Needs verification' = 'Medium confidence';
+      if (confPercent >= 85) confidenceLevel = 'High confidence';
+      else if (confPercent < 70) confidenceLevel = 'Needs verification';
+
+      // Separate labelBox (where text was read) from inputBox (where user writes)
+      const labelBox = item.labelBoxPercent || item.boundingBoxPercent || { x: 10, y: 20, width: 20, height: 4 };
+      const inputBox = item.inputBoxPercent || item.boundingBoxPercent || { x: 32, y: 20, width: 40, height: 5 };
 
       if (matchedFieldId) {
         const kField = knowledgeFields[matchedFieldId];
@@ -59,7 +60,10 @@ export function mapOcrToDetectedFields(
           canonicalName: kField.canonicalName,
           tamilName: kField.tamilName,
           confidence: confPercent,
-          boundingBox: boxPercent,
+          confidenceLevel,
+          boundingBox: inputBox,   // HIGHLIGHT THE ACTUAL INPUT AREA!
+          labelBox: labelBox,      // Field Label position
+          inputBox: inputBox,      // Field Input Area position
           isLowConfidence: confPercent < 70,
           rawText: textRaw,
           userValue: kField.sampleValue
@@ -71,17 +75,20 @@ export function mapOcrToDetectedFields(
         !textLower.includes("national") &&
         !textLower.includes("capital")
       ) {
-        // Unmatched field label from real upload -> Mark UNKNOWN with low confidence notice (Requirement #14)
+        // Unknown field label -> Mark Needs Verification
         const unknownKey = `UNKNOWN_${textLower.replace(/[^a-z0-9]/g, '_')}`;
         if (!processedFieldIds.has(unknownKey) && detectedFields.length < 8) {
           processedFieldIds.add(unknownKey);
 
           detectedFields.push({
             fieldId: unknownKey,
-            canonicalName: `Unclear Text (${textRaw.substring(0, 16)})`,
+            canonicalName: `Unclear Field (${textRaw.substring(0, 16)})`,
             tamilName: `அடையாளம் தெரியாத பகுதி (${textRaw.substring(0, 14)})`,
             confidence: Math.min(65, confPercent),
-            boundingBox: boxPercent,
+            confidenceLevel: 'Needs verification',
+            boundingBox: inputBox,
+            labelBox: labelBox,
+            inputBox: inputBox,
             isLowConfidence: true,
             rawText: textRaw,
             userValue: ""
@@ -91,19 +98,24 @@ export function mapOcrToDetectedFields(
     }
   }
 
-  // 2. DEMO MODE ONLY: If user explicitly clicked Demo Mode, provide pre-configured sample bank form fields
+  // 2. DEMO MODE ONLY: Pre-configured sample layouts with separate label and input boxes
   if (isDemo && detectedFields.length === 0) {
-    const demoItems: Array<{ id: string; box: { x: number; y: number; width: number; height: number }; conf: number }> = [
-      { id: "FULL_NAME", box: { x: 10, y: 15, width: 80, height: 7 }, conf: 98 },
-      { id: "ACCOUNT_NUMBER", box: { x: 10, y: 25, width: 80, height: 7 }, conf: 96 },
-      { id: "AADHAAR_NUMBER", box: { x: 10, y: 35, width: 80, height: 7 }, conf: 94 },
-      { id: "DATE_OF_BIRTH", box: { x: 10, y: 45, width: 38, height: 7 }, conf: 97 },
-      { id: "PHONE_NUMBER", box: { x: 52, y: 45, width: 38, height: 7 }, conf: 95 },
-      { id: "IFSC_CODE", box: { x: 10, y: 55, width: 38, height: 7 }, conf: 93 },
-      { id: "PAN_NUMBER", box: { x: 52, y: 55, width: 38, height: 7 }, conf: 92 },
-      { id: "ADDRESS", box: { x: 10, y: 65, width: 80, height: 9 }, conf: 91 },
-      { id: "SIGNATURE", box: { x: 52, y: 77, width: 38, height: 10 }, conf: 89 },
-      { id: "UNKNOWN_FIELD", box: { x: 10, y: 77, width: 38, height: 10 }, conf: 45 }
+    const demoItems: Array<{
+      id: string;
+      labelBox: BoundingBox;
+      inputBox: BoundingBox;
+      conf: number;
+    }> = [
+      { id: "FULL_NAME", labelBox: { x: 5, y: 15, width: 30, height: 5 }, inputBox: { x: 38, y: 15, width: 55, height: 6 }, conf: 98 },
+      { id: "ACCOUNT_NUMBER", labelBox: { x: 5, y: 25, width: 30, height: 5 }, inputBox: { x: 38, y: 25, width: 55, height: 6 }, conf: 96 },
+      { id: "AADHAAR_NUMBER", labelBox: { x: 5, y: 35, width: 30, height: 5 }, inputBox: { x: 38, y: 35, width: 55, height: 6 }, conf: 94 },
+      { id: "DATE_OF_BIRTH", labelBox: { x: 5, y: 45, width: 20, height: 5 }, inputBox: { x: 26, y: 45, width: 22, height: 6 }, conf: 97 },
+      { id: "PHONE_NUMBER", labelBox: { x: 52, y: 45, width: 20, height: 5 }, inputBox: { x: 73, y: 45, width: 22, height: 6 }, conf: 95 },
+      { id: "IFSC_CODE", labelBox: { x: 5, y: 55, width: 20, height: 5 }, inputBox: { x: 26, y: 55, width: 22, height: 6 }, conf: 93 },
+      { id: "PAN_NUMBER", labelBox: { x: 52, y: 55, width: 20, height: 5 }, inputBox: { x: 73, y: 55, width: 22, height: 6 }, conf: 92 },
+      { id: "ADDRESS", labelBox: { x: 5, y: 65, width: 30, height: 5 }, inputBox: { x: 38, y: 65, width: 55, height: 8 }, conf: 91 },
+      { id: "SIGNATURE", labelBox: { x: 52, y: 77, width: 20, height: 5 }, inputBox: { x: 73, y: 77, width: 22, height: 8 }, conf: 89 },
+      { id: "UNKNOWN_FIELD", labelBox: { x: 5, y: 77, width: 20, height: 5 }, inputBox: { x: 26, y: 77, width: 22, height: 8 }, conf: 45 }
     ];
 
     demoItems.forEach((item) => {
@@ -113,7 +125,10 @@ export function mapOcrToDetectedFields(
           canonicalName: "Unclear Field / கூடுதல் விவரம்",
           tamilName: "அடையாளம் தெரியாத பகுதி",
           confidence: 45,
-          boundingBox: item.box,
+          confidenceLevel: 'Needs verification',
+          boundingBox: item.inputBox,
+          labelBox: item.labelBox,
+          inputBox: item.inputBox,
           isLowConfidence: true,
           rawText: "Unclear text",
           userValue: ""
@@ -126,7 +141,10 @@ export function mapOcrToDetectedFields(
             canonicalName: kField.canonicalName,
             tamilName: kField.tamilName,
             confidence: item.conf,
-            boundingBox: item.box,
+            confidenceLevel: 'High confidence',
+            boundingBox: item.inputBox,
+            labelBox: item.labelBox,
+            inputBox: item.inputBox,
             isLowConfidence: false,
             rawText: kField.canonicalName,
             userValue: kField.sampleValue

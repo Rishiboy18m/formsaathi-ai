@@ -49,7 +49,10 @@ export interface DetectedField {
   canonicalName: string;
   tamilName: string;
   confidence: number;
-  boundingBox: BoundingBox;
+  confidenceLevel?: 'High confidence' | 'Medium confidence' | 'Needs verification';
+  boundingBox: BoundingBox;      // Target write area highlight (inputBox)
+  labelBox?: BoundingBox;        // Label position
+  inputBox?: BoundingBox;        // Writable input area position
   isLowConfidence?: boolean;
   rawText?: string;
   userValue?: string;

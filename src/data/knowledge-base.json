@@ -15,12 +15,12 @@
       "tamil": {
         "what": "இங்கே உங்கள் வங்கி கணக்கு எண்ணை எழுத வேண்டும்.",
         "where": "உங்கள் வங்கி பாஸ்புக்கில் கணக்கு எண்ணை பார்க்கலாம்.",
-        "whereToWrite": "படிவத்தில் கணக்கு எண் என்று காட்டப்பட்டுள்ள இடத்தில் எழுதுங்கள்."
+        "whereToWrite": "படிவத்தில் காட்டப்பட்டுள்ள கணக்கு எண் பகுதியில் எழுதுங்கள்."
       },
       "english": {
         "what": "You need to write your Bank Account Number here.",
         "where": "You can find your Account Number on your bank passbook.",
-        "whereToWrite": "Write inside the box marked Account Number highlighted on the form."
+        "whereToWrite": "Write inside the input area highlighted on the form."
       },
       "sampleValue": "50100293847561",
       "inputType": "text",
@@ -52,7 +52,7 @@
       "english": {
         "what": "You need to write your 12-digit Aadhaar number here.",
         "where": "You can find your Aadhaar number printed on your Aadhaar card.",
-        "whereToWrite": "Write inside the field marked Aadhaar Number highlighted on the form."
+        "whereToWrite": "Write inside the input field highlighted on the form."
       },
       "sampleValue": "4321 8765 9012",
       "inputType": "text",
@@ -74,17 +74,19 @@
         "name",
         "applicant name",
         "customer name",
-        "name in full"
+        "name in full",
+        "first name",
+        "last name"
       ],
       "tamil": {
         "what": "இங்கே உங்கள் அதிகாரப்பூர்வ முழு பெயரை எழுத வேண்டும்.",
-        "where": "உங்கள் ஆதார் கார்டு அல்லது வங்கி பாஸ்புக்கில் உள்ளவாறு பெயரை பார்க்கவும்.",
-        "whereToWrite": "படிவத்தில் பெயர் என்று காட்டப்பட்டுள்ள இடத்தில் எழுதுங்கள்."
+        "where": "உங்கள் ஆதார் கார்டு அல்லது பாஸ்புக்கில் உள்ளவாறு பெயரை பார்க்கவும்.",
+        "whereToWrite": "படிவத்தில் பெயர் பகுதிக்கு அருகில் உள்ள கோட்டில் எழுதுங்கள்."
       },
       "english": {
         "what": "Write your official full name here as per identity documents.",
         "where": "Check your Aadhaar card or Bank Passbook for your exact name spelling.",
-        "whereToWrite": "Write inside the field marked Full Name highlighted on the form."
+        "whereToWrite": "Write inside the input area highlighted on the form."
       },
       "sampleValue": "அருண் குமார் (ARUN KUMAR)",
       "inputType": "text",
@@ -110,12 +112,12 @@
       "tamil": {
         "what": "இங்கே உங்கள் பிறந்த தேதியை எழுத வேண்டும்.",
         "where": "உங்கள் ஆதார் அட்டையில் பிறந்த தேதியை பார்க்கலாம்.",
-        "whereToWrite": "படிவத்தில் பிறந்த தேதி என்று காட்டப்பட்டுள்ள இடத்தில் எழுதுங்கள்."
+        "whereToWrite": "படிவத்தில் பிறந்த தேதி பகுதிக்கு எதிரில் எழுதுங்கள்."
       },
       "english": {
         "what": "Write your date of birth here.",
         "where": "Check your date of birth printed on your Aadhaar card.",
-        "whereToWrite": "Write inside the box marked Date of Birth highlighted on the form."
+        "whereToWrite": "Write inside the box highlighted on the form."
       },
       "sampleValue": "15/08/1995",
       "inputType": "date",
@@ -127,27 +129,57 @@
         "errorMessageEnglish": "Please select a valid date of birth."
       }
     },
+    "PLACE_OF_BIRTH": {
+      "id": "PLACE_OF_BIRTH",
+      "canonicalName": "Place of Birth",
+      "tamilName": "பிறந்த இடம்",
+      "labels": [
+        "place of birth",
+        "birth place",
+        "place of birth (city/town)"
+      ],
+      "tamil": {
+        "what": "இங்கே நீங்கள் பிறந்த ஊர் அல்லது நகரத்தின் பெயரை எழுத வேண்டும்.",
+        "where": "உங்கள் பிறப்பு சான்றிதழ் அல்லது பாஸ்போர்ட்டில் பிறந்த இடத்தை பார்க்கலாம்.",
+        "whereToWrite": "படிவத்தில் பிறந்த இடம் என்று குறிக்கப்பட்ட கோட்டில் எழுதுங்கள்."
+      },
+      "english": {
+        "what": "Write your city or town of birth here.",
+        "where": "Find your place of birth printed on your Birth Certificate or Passport.",
+        "whereToWrite": "Write inside the input area highlighted on the form."
+      },
+      "sampleValue": "சென்னை (Chennai)",
+      "inputType": "text",
+      "placeholder": "பிறந்த ஊர் பெயர்",
+      "validation": {
+        "required": false,
+        "pattern": ".*",
+        "errorMessageTamil": "பிறந்த இடத்தை உள்ளிடவும்.",
+        "errorMessageEnglish": "Please enter place of birth."
+      }
+    },
     "ADDRESS": {
       "id": "ADDRESS",
       "canonicalName": "Address",
       "tamilName": "முகவரி",
       "labels": [
         "address",
+        "present address",
         "permanent address",
-        "communication address",
-        "residence address"
+        "residence address",
+        "residential address"
       ],
       "tamil": {
         "what": "இங்கே உங்கள் இருப்பிட முகவரியை எழுத வேண்டும்.",
         "where": "உங்கள் ஆதார் அட்டையின் பின்புறத்தில் முழு முகவரியை பார்க்கலாம்.",
-        "whereToWrite": "படிவத்தில் முகவரி என்று காட்டப்பட்டுள்ள கோடுகளில் எழுதுங்கள்."
+        "whereToWrite": "படிவத்தில் முகவரி என்று காட்டப்பட்டுள்ள இடத்தில் எழுதுங்கள்."
       },
       "english": {
         "what": "Write your complete residential address here.",
         "where": "Check the back of your Aadhaar card for your full address.",
-        "whereToWrite": "Write inside the section marked Address highlighted on the form."
+        "whereToWrite": "Write inside the section highlighted on the form."
       },
-      "sampleValue": "12, காந்தி தெரு, சென்னை - 600001",
+      "sampleValue": "12, காந்தி தெரு, சென்னை",
       "inputType": "textarea",
       "placeholder": "கதவு எண், தெரு பெயர், ஊர்...",
       "validation": {
@@ -155,6 +187,124 @@
         "pattern": ".{5,150}",
         "errorMessageTamil": "தயவுசெய்து உங்கள் முகவரியை உள்ளிடவும்.",
         "errorMessageEnglish": "Please enter your address."
+      }
+    },
+    "CITY": {
+      "id": "CITY",
+      "canonicalName": "City / Town",
+      "tamilName": "நகரம் / ஊர்",
+      "labels": [
+        "city",
+        "town",
+        "district",
+        "city / town"
+      ],
+      "tamil": {
+        "what": "இங்கே நீங்கள் வசிக்கும் நகரம் அல்லது மாவட்ட பெயரை எழுத வேண்டும்.",
+        "where": "உங்கள் ஆதார் அட்டையில் முகவரியின் கீழ் உள்ள நகர பெயரை பார்க்கவும்.",
+        "whereToWrite": "படிவத்தில் City என குறிக்கப்பட்ட இடத்தில் எழுதுங்கள்."
+      },
+      "english": {
+        "what": "Write your city, town, or district name here.",
+        "where": "Check the city/district printed in your address on your Aadhaar card.",
+        "whereToWrite": "Write inside the City input box highlighted on the form."
+      },
+      "sampleValue": "சென்னை (Chennai)",
+      "inputType": "text",
+      "placeholder": "நகரம் பெயர்",
+      "validation": {
+        "required": true,
+        "pattern": ".*",
+        "errorMessageTamil": "நகர பெயரை உள்ளிடவும்.",
+        "errorMessageEnglish": "Please enter city name."
+      }
+    },
+    "STATE": {
+      "id": "STATE",
+      "canonicalName": "State",
+      "tamilName": "மாநிலம்",
+      "labels": [
+        "state",
+        "province",
+        "state / province"
+      ],
+      "tamil": {
+        "what": "இங்கே உங்கள் மாநிலத்தின் பெயரை எழுத வேண்டும்.",
+        "where": "ஆதார் அட்டை முகவரி முடிவில் உள்ள மாநில பெயரை (எ.கா. தமிழ்நாடு) எழுதவும்.",
+        "whereToWrite": "படிவத்தில் State என்று காட்டப்பட்ட பெட்டியில் எழுதுங்கள்."
+      },
+      "english": {
+        "what": "Write your state or province name here.",
+        "where": "Check the state printed at the end of your address (e.g. Tamil Nadu).",
+        "whereToWrite": "Write inside the State input area highlighted on the form."
+      },
+      "sampleValue": "தமிழ்நாடு (Tamil Nadu)",
+      "inputType": "text",
+      "placeholder": "தமிழ்நாடு",
+      "validation": {
+        "required": true,
+        "pattern": ".*",
+        "errorMessageTamil": "மாநிலத்தை உள்ளிடவும்.",
+        "errorMessageEnglish": "Please enter state."
+      }
+    },
+    "COUNTRY": {
+      "id": "COUNTRY",
+      "canonicalName": "Country",
+      "tamilName": "நாடு",
+      "labels": [
+        "country",
+        "nationality country"
+      ],
+      "tamil": {
+        "what": "இங்கே உங்கள் நாட்டின் பெயரை (எ.கா. இந்தியா) எழுத வேண்டும்.",
+        "where": "உங்கள் பாஸ்போர்ட் அல்லது வாக்காளர் அட்டையில் உள்ளவாறு எழுதவும்.",
+        "whereToWrite": "படிவத்தில் Country என்று குறிக்கப்பட்ட இடத்தில் எழுதுங்கள்."
+      },
+      "english": {
+        "what": "Write your country of residence/citizenship here.",
+        "where": "Check your passport or identity document (e.g. India).",
+        "whereToWrite": "Write inside the Country field highlighted on the form."
+      },
+      "sampleValue": "இந்தியா (India)",
+      "inputType": "text",
+      "placeholder": "இந்தியா",
+      "validation": {
+        "required": true,
+        "pattern": ".*",
+        "errorMessageTamil": "நாட்டின் பெயரை உள்ளிடவும்.",
+        "errorMessageEnglish": "Please enter country."
+      }
+    },
+    "PIN_CODE": {
+      "id": "PIN_CODE",
+      "canonicalName": "PIN Code / ZIP Code",
+      "tamilName": "அஞ்சல் குறியீட்டு எண் (PIN Code)",
+      "labels": [
+        "pin code",
+        "pincode",
+        "zip code",
+        "postal code",
+        "zip"
+      ],
+      "tamil": {
+        "what": "இங்கே உங்கள் 6 இலக்க PIN Code-ஐ எழுத வேண்டும்.",
+        "where": "உங்கள் ஆதார் அட்டையின் பின்புறத்தில் முகவரிக்கு கீழே இந்த 6 இலக்க எண்ணை பார்க்கவும்.",
+        "whereToWrite": "படிவத்தில் PIN Code என்று காட்டப்பட்டுள்ள 6 சிற்றறைகளில் எழுதுங்கள்."
+      },
+      "english": {
+        "what": "Write the 6-digit postal PIN code of your area here.",
+        "where": "Check the 6-digit PIN code printed at the end of your address on your Aadhaar card.",
+        "whereToWrite": "Fill inside the boxes marked PIN Code highlighted on the form."
+      },
+      "sampleValue": "600001",
+      "inputType": "text",
+      "placeholder": "600001",
+      "validation": {
+        "required": true,
+        "pattern": "^[1-9][0-9]{5}$",
+        "errorMessageTamil": "சரியான 6 இலக்க PIN Code-ஐ உள்ளிடவும்.",
+        "errorMessageEnglish": "Please enter a valid 6-digit PIN code."
       }
     },
     "PHONE_NUMBER": {
@@ -167,6 +317,7 @@
         "mobile no.",
         "contact number",
         "tel no",
+        "phone",
         "mobile"
       ],
       "tamil": {
@@ -187,6 +338,37 @@
         "pattern": "^[6-9][0-9]{9}$",
         "errorMessageTamil": "சரியான 10 இலக்க மொபைல் எண்ணை உள்ளிடவும்.",
         "errorMessageEnglish": "Please enter a valid 10-digit mobile number."
+      }
+    },
+    "EMAIL": {
+      "id": "EMAIL",
+      "canonicalName": "Email Address",
+      "tamilName": "மின்னஞ்சல் முகவரி",
+      "labels": [
+        "email",
+        "email id",
+        "e-mail address",
+        "email address",
+        "e-mail"
+      ],
+      "tamil": {
+        "what": "இங்கே உங்கள் மின்னஞ்சல் முகவரியை எழுத வேண்டும்.",
+        "where": "உங்கள் ஸ்மார்ட்போனில் உள்ள ஜிமெயில் (Gmail) செயலியில் உங்கள் Email ID-ஐ பார்க்கலாம்.",
+        "whereToWrite": "படிவத்தில் மின்னஞ்சல் என்று காட்டப்பட்டுள்ள இடத்தில் எழுதுங்கள்."
+      },
+      "english": {
+        "what": "Write your active email address here.",
+        "where": "Find your email ID inside the Gmail app on your mobile phone.",
+        "whereToWrite": "Write inside the box marked Email highlighted on the form."
+      },
+      "sampleValue": "arunkumar@example.com",
+      "inputType": "email",
+      "placeholder": "name@example.com",
+      "validation": {
+        "required": false,
+        "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+        "errorMessageTamil": "சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.",
+        "errorMessageEnglish": "Please enter a valid email address."
       }
     },
     "IFSC_CODE": {
@@ -249,212 +431,91 @@
         "errorMessageEnglish": "Please enter a valid PAN number format."
       }
     },
-    "NOMINEE": {
-      "id": "NOMINEE",
-      "canonicalName": "Nominee",
-      "tamilName": "வாரிசுதாரர் (Nominee)",
+    "NATIONALITY": {
+      "id": "NATIONALITY",
+      "canonicalName": "Nationality",
+      "tamilName": "குடியுரிமை",
       "labels": [
-        "nominee name",
-        "nominee",
-        "name of nominee",
-        "nominee details"
+        "nationality",
+        "citizenship"
       ],
       "tamil": {
-        "what": "இங்கே உங்கள் கணக்கின் வாரிசுதாரர் பெயரை எழுத வேண்டும்.",
-        "where": "உங்களுக்குப் பிறகு கணக்கின் பலன்களை பெறக்கூடிய குடும்ப உறுப்பினரின் பெயரை தீர்மானித்து எழுதவும்.",
-        "whereToWrite": "படிவத்தில் வாரிசுதாரர் (Nominee) என்று காட்டப்பட்டுள்ள இடத்தில் எழுதுங்கள்."
+        "what": "இங்கே உங்கள் குடியுரிமையை (எ.கா. இந்தியர் / Indian) எழுத வேண்டும்.",
+        "where": "உங்கள் கடவுச்சீட்டு (Passport) அல்லது ஆதார் பதிவேட்டில் குடியுரிமை விவரத்தை பார்க்கலாம்.",
+        "whereToWrite": "படிவத்தில் Nationality என்று குறிக்கப்பட்ட இடத்தில் எழுதுங்கள்."
       },
       "english": {
-        "what": "Write the name of the person you designate as nominee for this account.",
-        "where": "Decide on a close family member and write their official legal name.",
-        "whereToWrite": "Write inside the section marked Nominee highlighted on the form."
+        "what": "Write your nationality or citizenship (e.g. Indian) here.",
+        "where": "Check your Passport or National ID card.",
+        "whereToWrite": "Write inside the Nationality input box highlighted on the form."
       },
-      "sampleValue": "சுரேஷ் அருண்",
+      "sampleValue": "இந்தியர் (Indian)",
       "inputType": "text",
-      "placeholder": "வாரிசுதாரரின் பெயர்",
-      "validation": {
-        "required": false,
-        "pattern": ".*",
-        "errorMessageTamil": "வாரிசுதாரரின் பெயரை உள்ளிடவும்.",
-        "errorMessageEnglish": "Please enter nominee name."
-      }
-    },
-    "FATHER_NAME": {
-      "id": "FATHER_NAME",
-      "canonicalName": "Father's Name",
-      "tamilName": "தந்தை பெயர்",
-      "labels": [
-        "father's name",
-        "father name",
-        "name of father"
-      ],
-      "tamil": {
-        "what": "இங்கே உங்கள் தந்தையின் முழு பெயரை எழுத வேண்டும்.",
-        "where": "உங்கள் ஆதார் கார்டு அல்லது 10ம் வகுப்பு சான்றிதழில் தந்தையின் பெயரை பார்க்கலாம்.",
-        "whereToWrite": "படிவத்தில் தந்தை பெயர் என்று காட்டப்பட்டுள்ள இடத்தில் எழுதுங்கள்."
-      },
-      "english": {
-        "what": "Write your father's full legal name here.",
-        "where": "Check your Aadhaar card or Voter ID for father's name.",
-        "whereToWrite": "Write inside the field marked Father's Name highlighted on the form."
-      },
-      "sampleValue": "ராமசாமி K",
-      "inputType": "text",
-      "placeholder": "தந்தையின் பெயர்",
-      "validation": {
-        "required": true,
-        "pattern": ".{2,50}",
-        "errorMessageTamil": "தந்தையின் பெயரை உள்ளிடவும்.",
-        "errorMessageEnglish": "Please enter father's name."
-      }
-    },
-    "MOTHER_NAME": {
-      "id": "MOTHER_NAME",
-      "canonicalName": "Mother's Name",
-      "tamilName": "தாயார் பெயர்",
-      "labels": [
-        "mother's name",
-        "mother name",
-        "name of mother"
-      ],
-      "tamil": {
-        "what": "இங்கே உங்கள் தாயாரின் முழு பெயரை எழுத வேண்டும்.",
-        "where": "உங்கள் பிறப்புச் சான்றிதழ் அல்லது ஆதார் பதிவேட்டில் தாயாரின் பெயரை பார்க்கலாம்.",
-        "whereToWrite": "படிவத்தில் தாயார் பெயர் என்று காட்டப்பட்டுள்ள இடத்தில் எழுதுங்கள்."
-      },
-      "english": {
-        "what": "Write your mother's full legal name here.",
-        "where": "Check your birth certificate or identity documents for mother's name.",
-        "whereToWrite": "Write inside the field marked Mother's Name highlighted on the form."
-      },
-      "sampleValue": "லக்ஷ்மி R",
-      "inputType": "text",
-      "placeholder": "தாயாரின் பெயர்",
-      "validation": {
-        "required": false,
-        "pattern": ".{2,50}",
-        "errorMessageTamil": "தாயாரின் பெயரை உள்ளிடவும்.",
-        "errorMessageEnglish": "Please enter mother's name."
-      }
-    },
-    "GENDER": {
-      "id": "GENDER",
-      "canonicalName": "Gender",
-      "tamilName": "பாலினம்",
-      "labels": [
-        "gender",
-        "sex",
-        "male/female/transgender"
-      ],
-      "tamil": {
-        "what": "இங்கே உங்கள் பாலினத்தை (ஆண் / பெண்) தேர்வு செய்ய வேண்டும்.",
-        "where": "உங்கள் ஆதார் அட்டையில் குறிப்பிடப்பட்டுள்ள பாலினத்தை பார்க்கவும்.",
-        "whereToWrite": "படிவத்தில் பாலினம் என்று காட்டப்பட்டுள்ள இடத்தில் பொருத்தமான பெட்டியில் டிக் இடவும்."
-      },
-      "english": {
-        "what": "Select your registered gender here.",
-        "where": "Check your identity card for your registered gender details.",
-        "whereToWrite": "Tick the appropriate box marked Gender highlighted on the form."
-      },
-      "sampleValue": "ஆண் (Male)",
-      "inputType": "select",
-      "options": ["ஆண் (Male)", "பெண் (Female)", "மற்றவை (Other)"],
-      "placeholder": "பாலினத்தை தேர்ந்தெடுக்கவும்",
+      "placeholder": "இந்தியர்",
       "validation": {
         "required": true,
         "pattern": ".*",
-        "errorMessageTamil": "பாலினத்தை தேர்ந்தெடுக்கவும்.",
-        "errorMessageEnglish": "Please select gender."
+        "errorMessageTamil": "குடியுரிமையை உள்ளிடவும்.",
+        "errorMessageEnglish": "Please enter nationality."
       }
     },
-    "OCCUPATION": {
-      "id": "OCCUPATION",
-      "canonicalName": "Occupation",
-      "tamilName": "தொழில்",
+    "ID_NUMBER": {
+      "id": "ID_NUMBER",
+      "canonicalName": "ID Number / Identity No",
+      "tamilName": "அடையாள அட்டை எண்",
       "labels": [
-        "occupation",
-        "profession",
-        "employment type",
-        "work"
+        "id number",
+        "identity no",
+        "voter id",
+        "passport no"
       ],
       "tamil": {
-        "what": "இங்கே நீங்கள் செய்யும் தொழிலை எழுத வேண்டும்.",
-        "where": "உங்கள் வேலை அல்லது வியாபாரம் தொடர்பான விவரங்களை குறிப்பிடவும்.",
-        "whereToWrite": "படிவத்தில் தொழில் என்று காட்டப்பட்டுள்ள இடத்தில் எழுதுங்கள்."
+        "what": "இங்கே உங்கள் அதிகாரப்பூர்வ அடையாள அட்டை எண்ணை எழுத வேண்டும்.",
+        "where": "உங்கள் வாக்காளர் அட்டை, பாஸ்போர்ட் அல்லது ஓட்டுநர் உரிமத்தில் இந்த எண்ணை பார்க்கலாம்.",
+        "whereToWrite": "படிவத்தில் ID Number என்று காட்டப்பட்டுள்ள இடத்தில் எழுதுங்கள்."
       },
       "english": {
-        "what": "Write your primary occupation or profession here.",
-        "where": "Specify your current employment or business status.",
-        "whereToWrite": "Write inside the section marked Occupation highlighted on the form."
+        "what": "Write your official identity card or passport number here.",
+        "where": "Find the number on your Voter ID, Passport, or Driving License.",
+        "whereToWrite": "Write inside the ID Number field highlighted on the form."
       },
-      "sampleValue": "தனியார் வேலை (Private Employee)",
+      "sampleValue": "TN/01/2026/098765",
       "inputType": "text",
-      "placeholder": "வியாபாரம் / விவசாயம் / வேலை",
+      "placeholder": "அடையாள அட்டை எண்",
+      "validation": {
+        "required": true,
+        "pattern": ".*",
+        "errorMessageTamil": "அடையாள அட்டை எண்ணை உள்ளிடவும்.",
+        "errorMessageEnglish": "Please enter ID number."
+      }
+    },
+    "TIN_NUMBER": {
+      "id": "TIN_NUMBER",
+      "canonicalName": "TIN Number / Tax ID",
+      "tamilName": "வரி அடையாள எண் (TIN)",
+      "labels": [
+        "tin number",
+        "tax id",
+        "taxpayer id"
+      ],
+      "tamil": {
+        "what": "இங்கே உங்கள் வரி செலுத்துவோர் அடையாள எண்ணை (Tax ID / TIN) எழுத வேண்டும்.",
+        "where": "உங்கள் வருமான வரி தாக்கல் அட்டை அல்லது வணிகப் பதிவேட்டில் இந்த எண்ணை பார்க்கவும்.",
+        "whereToWrite": "படிவத்தில் TIN Number என்று குறிக்கப்பட்ட கட்டத்தில் எழுதுங்கள்."
+      },
+      "english": {
+        "what": "Write your Tax Identification Number (TIN/Tax ID) here.",
+        "where": "Find your TIN printed on your tax filings or business registration.",
+        "whereToWrite": "Write inside the TIN Number box highlighted on the form."
+      },
+      "sampleValue": "33001122334",
+      "inputType": "text",
+      "placeholder": "TIN / Tax ID",
       "validation": {
         "required": false,
         "pattern": ".*",
-        "errorMessageTamil": "தொழில் விவரத்தை உள்ளிடவும்.",
-        "errorMessageEnglish": "Please enter occupation."
-      }
-    },
-    "EMAIL": {
-      "id": "EMAIL",
-      "canonicalName": "Email Address",
-      "tamilName": "மின்னஞ்சல் முகவரி",
-      "labels": [
-        "email",
-        "email id",
-        "e-mail address",
-        "email address"
-      ],
-      "tamil": {
-        "what": "இங்கே உங்கள் மின்னஞ்சல் முகவரியை எழுத வேண்டும்.",
-        "where": "உங்கள் ஸ்மார்ட்போனில் உள்ள ஜிமெயில் (Gmail) செயலியில் உங்கள் Email ID-ஐ பார்க்கலாம்.",
-        "whereToWrite": "படிவத்தில் மின்னஞ்சல் என்று காட்டப்பட்டுள்ள இடத்தில் எழுதுங்கள்."
-      },
-      "english": {
-        "what": "Write your active email address here.",
-        "where": "Find your email ID inside the Gmail app on your mobile phone.",
-        "whereToWrite": "Write inside the box marked Email highlighted on the form."
-      },
-      "sampleValue": "arunkumar@example.com",
-      "inputType": "email",
-      "placeholder": "name@example.com",
-      "validation": {
-        "required": false,
-        "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
-        "errorMessageTamil": "சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.",
-        "errorMessageEnglish": "Please enter a valid email address."
-      }
-    },
-    "PIN_CODE": {
-      "id": "PIN_CODE",
-      "canonicalName": "PIN Code",
-      "tamilName": "PIN Code",
-      "labels": [
-        "pin code",
-        "pincode",
-        "postal code",
-        "zip code"
-      ],
-      "tamil": {
-        "what": "இங்கே உங்கள் பகுதி அஞ்சலகத்தின் 6 இலக்க PIN Code-ஐ எழுத வேண்டும்.",
-        "where": "உங்கள் ஆதார் அட்டையின் பின்புறத்தில் முகவரிக்கு கீழே இந்த 6 இலக்க எண்ணை பார்க்கலாம்.",
-        "whereToWrite": "படிவத்தில் PIN Code என்று காட்டப்பட்டுள்ள 6 பெட்டிகளில் எழுதுங்கள்."
-      },
-      "english": {
-        "what": "Write the 6-digit postal PIN code of your area here.",
-        "where": "Check the 6-digit PIN code printed at the end of your address on your Aadhaar card.",
-        "whereToWrite": "Fill inside the 6 boxes marked PIN Code highlighted on the form."
-      },
-      "sampleValue": "600001",
-      "inputType": "text",
-      "placeholder": "600001",
-      "validation": {
-        "required": true,
-        "pattern": "^[1-9][0-9]{5}$",
-        "errorMessageTamil": "சரியான 6 இலக்க PIN Code-ஐ உள்ளிடவும்.",
-        "errorMessageEnglish": "Please enter a valid 6-digit PIN code."
+        "errorMessageTamil": "வரி அடையாள எண்ணை உள்ளிடவும்.",
+        "errorMessageEnglish": "Please enter TIN number."
       }
     },
     "SIGNATURE": {

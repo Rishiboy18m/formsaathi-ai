@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { DetectedField, KnowledgeField } from '@/types/form';
 import { VoiceButton } from './VoiceButton';
 import { AskAI } from './AskAI';
-import { Bot, MapPin, FileEdit, HelpCircle, AlertTriangle, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Bot, MapPin, FileEdit, HelpCircle, AlertTriangle, Sparkles } from 'lucide-react';
 import knowledgeBaseData from '@/data/knowledge-base.json';
 
 interface GuidancePanelProps {
@@ -29,12 +29,14 @@ export const GuidancePanel: React.FC<GuidancePanelProps> = ({ selectedField }) =
   }
 
   const kField = knowledgeFields[selectedField.fieldId];
-  const isLowConfidence = selectedField.isLowConfidence || !kField;
+  const isLowConfidence = selectedField.isLowConfidence || !kField || selectedField.confidenceLevel === 'Needs verification';
 
   // Text content to speak out loud
   const fullTextToSpeak = isLowConfidence
-    ? "இந்த பகுதியை உறுதியாக அடையாளம் காண முடியவில்லை. தயவுசெய்து சரிபார்க்கவும்."
+    ? "இந்த புலத்தை துல்லியமாக கண்டறிய முடியவில்லை. தயவுசெய்து சரிபார்க்கவும்."
     : `${selectedField.tamilName}. என்ன நிரப்ப வேண்டும்: ${kField.tamil.what} எங்கே கிடைக்கும்: ${kField.tamil.where} எங்கே எழுத வேண்டும்: ${kField.tamil.whereToWrite}`;
+
+  const confidenceBadgeText = selectedField.confidenceLevel || (selectedField.confidence >= 85 ? 'High confidence' : selectedField.confidence >= 70 ? 'Medium confidence' : 'Needs verification');
 
   return (
     <div className="bg-white rounded-3xl p-5 sm:p-6 border border-teal-100 shadow-xl space-y-6 flex flex-col justify-between h-full">
@@ -68,26 +70,29 @@ export const GuidancePanel: React.FC<GuidancePanelProps> = ({ selectedField }) =
               </span>
             </div>
           </div>
-          <span className="text-xs font-bold bg-white text-teal-800 px-3 py-1 rounded-full border border-teal-200 shadow-sm">
-            {selectedField.confidence}% Accuracy
+          <span className={`text-xs font-bold px-3 py-1 rounded-full border shadow-sm ${
+            confidenceBadgeText === 'High confidence'
+              ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+              : confidenceBadgeText === 'Medium confidence'
+              ? 'bg-teal-100 text-teal-800 border-teal-300'
+              : 'bg-amber-100 text-amber-900 border-amber-300'
+          }`}>
+            {confidenceBadgeText}
           </span>
         </div>
       </div>
 
       {/* Main Guidance Sections */}
       {isLowConfidence ? (
-        /* Low Confidence / Unknown Warning Box (Prompt Section 9) */
+        /* Low Confidence / Needs Verification Notice (Requirement #18) */
         <div className="p-5 bg-amber-50 border-2 border-dashed border-amber-300 rounded-2xl space-y-3">
           <div className="flex items-center space-x-2 text-amber-900 font-bold text-base">
             <AlertTriangle className="w-6 h-6 text-amber-600 shrink-0" />
-            <span>இந்த பகுதியை உறுதியாக அடையாளம் காண முடியவில்லை.</span>
+            <span>இந்த புலத்தை துல்லியமாக கண்டறிய முடியவில்லை. தயவுசெய்து சரிபார்க்கவும்.</span>
           </div>
           <p className="text-xs text-amber-800 leading-relaxed">
-            I&apos;m not fully confident about this field. Please verify carefully with an official authority before writing.
+            Unable to determine the exact input area. Please verify with official records before writing inside this box.
           </p>
-          <div className="pt-2 border-t border-amber-200 text-xs font-semibold text-amber-900">
-            💡 பரிந்துரை: படிவத்தில் 'காரணம்' அல்லது 'கூடுதல் விளக்கம்' கோரப்பட்டிருக்கலாம்.
-          </div>
         </div>
       ) : (
         <div className="space-y-4 my-2">

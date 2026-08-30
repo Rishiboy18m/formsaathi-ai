@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { DetectedField } from '@/types/form';
-import { Terminal, ChevronDown, ChevronUp, Code, Check } from 'lucide-react';
+import { Terminal, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface DebugPanelProps {
   detectedFields: DetectedField[];
@@ -29,9 +29,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
       >
         <div className="flex items-center space-x-2">
           <Terminal className="w-4 h-4 text-emerald-400" />
-          <span>🛠️ PaddleOCR Debug Console ({detectedFields.length} Detected Regions)</span>
+          <span>🛠️ Layout Analysis Debug Console ({detectedFields.length} Detected Regions)</span>
           <span className="bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-full font-normal">
-            {isDemo ? 'Demo Mode' : 'Live Real OCR'}
+            {isDemo ? 'Demo Mode' : 'Live Real OCR + Spatial Analysis'}
           </span>
         </div>
 
@@ -56,29 +56,33 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
             </div>
 
             <div>
-              <p className="text-slate-400 font-semibold mb-1">🎯 Currently Selected Field:</p>
+              <p className="text-slate-400 font-semibold mb-1">🎯 Selected Field:</p>
               <p className="text-amber-300 font-bold bg-slate-950 p-2 rounded-xl border border-slate-800 truncate">
                 {selectedField ? `${selectedField.canonicalName} [ID: ${selectedField.fieldId}]` : 'None'}
               </p>
             </div>
           </div>
 
-          {/* Table of all detected text regions */}
+          {/* Table of all detected text & input regions */}
           <div>
-            <p className="text-slate-400 font-semibold mb-2">🔍 Detected OCR Bounding Box Table:</p>
-            <div className="overflow-x-auto bg-slate-950 rounded-2xl border border-slate-800 max-h-56 overflow-y-auto">
+            <p className="text-slate-400 font-semibold mb-2">🔍 Spatial Analysis Bounding Box Table:</p>
+            <div className="overflow-x-auto bg-slate-950 rounded-2xl border border-slate-800 max-h-64 overflow-y-auto">
               <table className="w-full text-left text-[11px]">
                 <thead className="bg-slate-800 text-slate-300 sticky top-0">
                   <tr>
                     <th className="p-2">Field ID</th>
-                    <th className="p-2">OCR Raw Text</th>
-                    <th className="p-2">Confidence</th>
-                    <th className="p-2">Bounding Box (x, y, w, h %)</th>
+                    <th className="p-2">OCR Text</th>
+                    <th className="p-2">Confidence Level</th>
+                    <th className="p-2">OCR Label Box (x,y,w,h %)</th>
+                    <th className="p-2">Target Input Box (x,y,w,h %)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800 text-slate-300">
                   {detectedFields.map((f) => {
                     const isSelected = selectedField?.fieldId === f.fieldId;
+                    const lBox = f.labelBox || f.boundingBox;
+                    const iBox = f.inputBox || f.boundingBox;
+
                     return (
                       <tr
                         key={f.fieldId}
@@ -86,9 +90,12 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                       >
                         <td className="p-2 font-mono">{f.fieldId}</td>
                         <td className="p-2 text-slate-200">{f.rawText || f.canonicalName}</td>
-                        <td className="p-2 font-bold">{f.confidence}%</td>
-                        <td className="p-2 text-emerald-400 font-mono">
-                          x:{f.boundingBox.x}% y:{f.boundingBox.y}% w:{f.boundingBox.width}% h:{f.boundingBox.height}%
+                        <td className="p-2 font-bold">{f.confidenceLevel || `${f.confidence}%`}</td>
+                        <td className="p-2 text-slate-400 font-mono">
+                          x:{lBox.x}% y:{lBox.y}% w:{lBox.width}% h:{lBox.height}%
+                        </td>
+                        <td className="p-2 text-emerald-400 font-mono font-bold">
+                          x:{iBox.x}% y:{iBox.y}% w:{iBox.width}% h:{iBox.height}%
                         </td>
                       </tr>
                     );

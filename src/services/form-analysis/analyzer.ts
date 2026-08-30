@@ -28,21 +28,26 @@ export async function analyzeUploadedForm(
   if (typeof imageSource === 'string') {
     imageUrl = imageSource;
   } else {
-    fileToUpload = await compressImageForUpload(imageSource);
-    imageUrl = URL.createObjectURL(fileToUpload);
+    try {
+      fileToUpload = await compressImageForUpload(imageSource);
+      imageUrl = URL.createObjectURL(fileToUpload);
+    } catch {
+      fileToUpload = imageSource;
+      imageUrl = URL.createObjectURL(imageSource);
+    }
   }
 
   let ocrItems: RawOcrItem[] = [];
   let isSuccess = false;
 
-  // REAL UPLOAD = Send actual compressed image to VLM Vision Model backend
+  // REAL UPLOAD = Send image to VLM Vision Model backend
   if (fileToUpload) {
     try {
       const formData = new FormData();
       formData.append('file', fileToUpload, fileToUpload.name);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout for complex forms
 
       const response = await fetch('http://127.0.0.1:8000/analyze-form', {
         method: 'POST',

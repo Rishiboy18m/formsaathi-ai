@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { Language, Screen, AnalysisResult, DetectedField } from '@/types/form';
 import { analyzeUploadedForm } from '@/services/form-analysis/analyzer';
-import { generateSampleFormSvgDataUrl } from '@/utils/sampleFormGenerator';
 import { Header } from '@/components/Header';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { FormTypeCard } from '@/components/FormTypeCard';
@@ -22,7 +21,6 @@ export default function Home() {
   const [currentLanguage, setCurrentLanguage] = useState<Language>('ta');
   const [currentScreen, setCurrentScreen] = useState<Screen>('language');
   const [pendingImage, setPendingImage] = useState<File | string | null>(null);
-  const [pendingIsDemo, setPendingIsDemo] = useState<boolean>(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [selectedFieldIndex, setSelectedFieldIndex] = useState<number>(0);
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
@@ -30,18 +28,21 @@ export default function Home() {
   const [isDebugMode, setIsDebugMode] = useState<boolean>(true);
 
   // Screen 3 -> Screen 4
-  const handleStartAnalysis = (fileOrUrl: File | string, isDemo: boolean) => {
+  const handleStartAnalysis = (fileOrUrl: File | string) => {
     setPendingImage(fileOrUrl);
-    setPendingIsDemo(isDemo);
     setIsError(false);
     setCurrentScreen('analysis');
   };
 
-  // Screen 4 -> Screen 5
+  // Screen 4 -> Screen 5 (REAL ANALYSIS ONLY)
   const handleAnalysisComplete = async () => {
     try {
-      const source = pendingImage || generateSampleFormSvgDataUrl('account');
-      const result = await analyzeUploadedForm(source, pendingIsDemo);
+      if (!pendingImage) {
+        setIsError(true);
+        return;
+      }
+
+      const result = await analyzeUploadedForm(pendingImage);
 
       if (!result || !result.detectedFields || result.detectedFields.length === 0) {
         setIsError(true);
@@ -52,7 +53,7 @@ export default function Home() {
       setSelectedFieldIndex(0);
       setCurrentScreen('guidance');
     } catch (err) {
-      console.error('Analysis error:', err);
+      console.error('Real VLM analysis error:', err);
       setIsError(true);
     }
   };
@@ -107,7 +108,7 @@ export default function Home() {
           <AnalysisProgress onComplete={handleAnalysisComplete} />
         )}
 
-        {/* Error Failure Screen */}
+        {/* Error Failure Screen (Real VLM Error) */}
         {isError && (
           <ErrorMessage
             onTryAgain={() => setCurrentScreen('analysis')}
@@ -133,11 +134,9 @@ export default function Home() {
                 <span className="text-sm font-extrabold text-gray-900 truncate max-w-xs sm:max-w-md">
                   {analysisResult.formTitle}
                 </span>
-                {analysisResult.isDemo && (
-                  <span className="bg-amber-100 text-amber-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-amber-200 shrink-0">
-                    Sample Demo Form
-                  </span>
-                )}
+                <span className="bg-teal-100 text-teal-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-teal-200 shrink-0">
+                  Real VLM Vision Analysis
+                </span>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -206,7 +205,7 @@ export default function Home() {
                 detectedFields={analysisResult.detectedFields}
                 selectedField={selectedField}
                 formTitle={analysisResult.formTitle}
-                isDemo={analysisResult.isDemo}
+                isDemo={false}
               />
             )}
 

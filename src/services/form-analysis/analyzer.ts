@@ -2,8 +2,7 @@ import { mapOcrToDetectedFields, RawOcrItem } from './fieldMapper';
 import { AnalysisResult } from '@/types/form';
 
 export async function analyzeUploadedForm(
-  imageSource: File | string,
-  isDemo: boolean = false
+  imageSource: File | string
 ): Promise<AnalysisResult> {
   let imageUrl: string;
   if (typeof imageSource === 'string') {
@@ -15,51 +14,37 @@ export async function analyzeUploadedForm(
   let ocrItems: RawOcrItem[] = [];
   let isSuccess = false;
 
-  // 1. If DEMO MODE is explicitly selected by user
-  if (isDemo) {
-    const detectedFields = mapOcrToDetectedFields([], true);
-    return {
-      formId: `demo_form_${Date.now()}`,
-      formTitle: "மாதிரி வங்கி படிவம் (Sample Demo Bank Form)",
-      originalImageUrl: imageUrl,
-      detectedFields,
-      qualityScore: 95,
-      timestamp: new Date().toISOString(),
-      isDemo: true
-    };
-  }
-
-  // 2. REAL UPLOAD = Send actual image to FastAPI PaddleOCR backend
+  // REAL UPLOAD ONLY = Send actual image to VLM Vision Model backend
   if (typeof imageSource !== 'string' && imageSource instanceof File) {
-    try {
-      const formData = new FormData();
-      formData.append('file', imageSource, imageSource.name);
+    const formData = new FormData();
+    formData.append('file', imageSource, imageSource.name);
 
-      const response = await fetch('http://127.0.0.1:8000/analyze-form', {
-        method: 'POST',
-        body: formData
-      });
+    const response = await fetch('http://127.0.0.1:8000/analyze-form', {
+      method: 'POST',
+      body: formData
+    });
 
-      if (response.ok) {
-        const resData = await response.json();
-        if (resData.success && Array.isArray(resData.ocr)) {
-          ocrItems = resData.ocr;
-          isSuccess = true;
-        }
-      }
-    } catch (backendErr) {
-      console.warn('FastAPI PaddleOCR backend call error:', backendErr);
+    if (!response.ok) {
+      throw new Error(`Real VLM backend failed with status ${response.status}. Could not analyze image.`);
+    }
+
+    const resData = await response.json();
+    if (resData.success && Array.isArray(resData.ocr) && resData.ocr.length > 0) {
+      ocrItems = resData.ocr;
+      isSuccess = true;
+    } else {
+      throw new Error("VLM model could not detect readable fields on the uploaded image.");
     }
   }
 
-  // 3. Client-side Tesseract OCR fallback if backend unreachable
-  if (ocrItems.length === 0) {
+  // Client-side fallback process for image URLs
+  if (!isSuccess && ocrItems.length === 0) {
     try {
       const { TesseractOcrAdapter } = await import('../ocr/tesseractAdapter');
       const adapter = new TesseractOcrAdapter();
       const tesseractRes = await adapter.processImage(imageSource);
 
-      if (tesseractRes.success && tesseractRes.words) {
+      if (tesseractRes.success && tesseractRes.words && tesseractRes.words.length > 0) {
         ocrItems = tesseractRes.words.map((w) => ({
           text: w.text,
           confidence: w.confidence / 100.0,
@@ -72,21 +57,21 @@ export async function analyzeUploadedForm(
     }
   }
 
-  // 4. Map real OCR output to detected fields (NO MOCK FALLBACKS FOR REAL UPLOADS)
-  const detectedFields = mapOcrToDetectedFields(ocrItems, false);
+  // Map real OCR/VLM output ONLY (Zero demo fallbacks)
+  const detectedFields = mapOcrToDetectedFields(ocrItems);
 
-  if (detectedFields.length === 0 && !isSuccess) {
-    throw new Error("Could not analyze the form. No text or fields detected.");
+  if (detectedFields.length === 0 || !isSuccess) {
+    throw new Error("Unable to analyze the form. Could not detect valid fields on the uploaded image.");
   }
 
   return {
     formId: `form_${Date.now()}`,
     formTitle: typeof imageSource !== 'string' && imageSource.name
       ? imageSource.name
-      : "பதிவேற்றப்பட்ட படிவம் (Uploaded Physical Form)",
+      : "Uploaded Physical Form",
     originalImageUrl: imageUrl,
     detectedFields,
-    qualityScore: isSuccess ? 92 : 60,
+    qualityScore: 92,
     timestamp: new Date().toISOString(),
     isDemo: false
   };

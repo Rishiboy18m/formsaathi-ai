@@ -62,6 +62,8 @@ export default function Home() {
       ? analysisResult.detectedFields[selectedFieldIndex]
       : null;
 
+  const isEn = currentLanguage === 'en';
+
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900">
       
@@ -91,6 +93,7 @@ export default function Home() {
           <FormTypeCard
             onSelectPhysical={() => setCurrentScreen('upload')}
             onSelectEForm={() => setCurrentScreen('eform')}
+            currentLanguage={currentLanguage}
           />
         )}
 
@@ -109,6 +112,7 @@ export default function Home() {
           <ErrorMessage
             onTryAgain={() => setCurrentScreen('analysis')}
             onUploadAnother={() => setCurrentScreen('upload')}
+            currentLanguage={currentLanguage}
           />
         )}
 
@@ -124,7 +128,7 @@ export default function Home() {
                   className="px-3 py-1.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-teal-50 hover:text-teal-800 text-xs font-bold transition-all flex items-center space-x-1"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>வேறொரு படிவம்</span>
+                  <span>{isEn ? 'Change Form' : 'வேறொரு படிவம்'}</span>
                 </button>
                 <span className="text-sm font-extrabold text-gray-900 truncate max-w-xs sm:max-w-md">
                   {analysisResult.formTitle}
@@ -155,7 +159,7 @@ export default function Home() {
                   className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 shadow-sm transition-all flex items-center space-x-1.5"
                 >
                   <Monitor className="w-4 h-4" />
-                  <span>💻 E-Form-க்கு மாறவும்</span>
+                  <span>{isEn ? '💻 Switch to E-Form' : '💻 E-Form-க்கு மாறவும்'}</span>
                 </button>
               </div>
             </div>
@@ -165,6 +169,7 @@ export default function Home() {
               fields={analysisResult.detectedFields}
               selectedIndex={selectedFieldIndex}
               onSelectIndex={setSelectedFieldIndex}
+              currentLanguage={currentLanguage}
             />
 
             {/* Two-Column Guidance Layout */}
@@ -187,7 +192,10 @@ export default function Home() {
 
               {/* Right Side: AI Form Assistant Guidance Panel (5 cols) */}
               <div className="lg:col-span-5 h-full">
-                <GuidancePanel selectedField={selectedField} />
+                <GuidancePanel
+                  selectedField={selectedField}
+                  currentLanguage={currentLanguage}
+                />
               </div>
 
             </div>
@@ -214,10 +222,10 @@ export default function Home() {
                 className="px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-teal-50 hover:text-teal-800 text-xs font-bold transition-all flex items-center space-x-1 shadow-sm"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>திரும்பவும்</span>
+                <span>{isEn ? 'Back' : 'திரும்பவும்'}</span>
               </button>
             </div>
-            <EForm />
+            <EForm currentLanguage={currentLanguage} />
           </div>
         )}
 
@@ -228,14 +236,18 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center space-x-2">
             <span className="font-bold text-teal-800">FormSaathi AI</span>
-            <span>— தமிழ் AI படிவ வழிகாட்டி</span>
+            <span>{isEn ? '— AI Form Assistant' : '— தமிழ் AI படிவ வழிகாட்டி'}</span>
           </div>
           <p>© 2026 FormSaathi AI. Public Assistance Project.</p>
         </div>
       </footer>
 
       {/* User Help Modal */}
-      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+      <HelpModal
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+        currentLanguage={currentLanguage}
+      />
 
     </div>
   );

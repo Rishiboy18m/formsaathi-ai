@@ -1,15 +1,18 @@
 'use client';
 
 import React from 'react';
-import { X, HelpCircle, Sparkles, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Language } from '@/types/form';
+import { X, HelpCircle } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
   onClose: () => void;
+  currentLanguage?: Language;
 }
 
-export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
+export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, currentLanguage = 'ta' }) => {
   if (!isOpen) return null;
+  const isEn = currentLanguage === 'en';
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
@@ -27,30 +30,44 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <HelpCircle className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-extrabold text-gray-900">FormSaathi AI உதவி</h2>
+            <h2 className="text-2xl font-extrabold text-gray-900">
+              {isEn ? 'FormSaathi AI Help' : 'FormSaathi AI உதவி'}
+            </h2>
             <p className="text-xs text-teal-700 font-semibold">User Guidance & Help</p>
           </div>
         </div>
 
         <div className="space-y-4 text-sm text-gray-700">
           <div className="p-3 bg-teal-50 rounded-2xl border border-teal-100 space-y-1">
-            <p className="font-bold text-teal-900">1. Physical Form (காகித படிவம்):</p>
+            <p className="font-bold text-teal-900">
+              {isEn ? '1. Physical Form Assistance:' : '1. Physical Form (காகித படிவம்):'}
+            </p>
             <p className="text-xs text-teal-800">
-              உங்கள் படிவத்தைப் படம் பிடித்துப் பதிவேற்றுங்கள். AI அதில் உள்ள தகவல்களைப் படித்து, எங்கு எழுத வேண்டும், பாஸ்புக்கில் எங்கு தகவலைக் காண்பது என விளக்கும்.
+              {isEn
+                ? 'Upload or take a photo of your paper form. AI detects the layout, highlights where to write, and explains where to find details on your passbook or Aadhaar card.'
+                : 'உங்கள் படிவத்தைப் படம் பிடித்துப் பதிவேற்றுங்கள். AI அதில் உள்ள தகவல்களைப் படித்து, எங்கு எழுத வேண்டும், பாஸ்புக்கில் எங்கு தகவலைக் காண்பது என விளக்கும்.'}
             </p>
           </div>
 
           <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-1">
-            <p className="font-bold text-emerald-900">2. E-Form (மின்னணு படிவம்):</p>
+            <p className="font-bold text-emerald-900">
+              {isEn ? '2. Digital E-Form:' : '2. E-Form (மின்னணு படிவம்):'}
+            </p>
             <p className="text-xs text-emerald-800">
-              நேரடியாக உங்கள் போன்/கணினியில் படிவத்தை நிரப்பலாம். குரல் மூலம் (Voice Input) பேசியும் உள்ளிடலாம்.
+              {isEn
+                ? 'Fill out forms digitally with voice dictation input and real-time guidance.'
+                : 'நேரடியாக உங்கள் போன்/கணினியில் படிவத்தை நிரப்பலாம். குரல் மூலம் (Voice Input) பேசியும் உள்ளிடலாம்.'}
             </p>
           </div>
 
           <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
-            <p className="font-bold text-gray-900">3. குரல் உதவி (TTS Audio):</p>
+            <p className="font-bold text-gray-900">
+              {isEn ? '3. Audio Assistance:' : '3. குரல் உதவி (TTS Audio):'}
+            </p>
             <p className="text-xs text-gray-600">
-              &quot;🔊 கேட்டு அறியவும்&quot; பொத்தானை அழுத்தினால் விளக்கம் தமிழில் வாசித்துக்காட்டப்படும்.
+              {isEn
+                ? 'Tap the 🔊 Listen button to have explanations read out loud in your preferred language.'
+                : '""🔊 கேட்டு அறியவும்"" பொத்தானை அழுத்தினால் விளக்கம் தமிழில் வாசித்துக்காட்டப்படும்.'}
             </p>
           </div>
         </div>
@@ -59,7 +76,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           onClick={onClose}
           className="w-full py-3.5 rounded-2xl bg-teal-600 text-white font-bold text-base shadow-md hover:bg-teal-700 transition-all"
         >
-          சரி, புரிந்து கொண்டேன் (Got It)
+          {isEn ? 'Got It' : 'சரி, புரிந்து கொண்டேன் (Got It)'}
         </button>
 
       </div>

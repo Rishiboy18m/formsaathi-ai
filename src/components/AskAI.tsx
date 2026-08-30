@@ -1,28 +1,34 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MessageSquare, X, Send, Bot, User, Sparkles, HelpCircle } from 'lucide-react';
-import { ChatMessage } from '@/types/form';
+import { X, Send, Bot, User } from 'lucide-react';
+import { ChatMessage, Language } from '@/types/form';
 import knowledgeBaseData from '@/data/knowledge-base.json';
 
 interface AskAIProps {
   isOpen: boolean;
   onClose: () => void;
   currentFieldName?: string;
+  currentLanguage?: Language;
 }
 
 export const AskAI: React.FC<AskAIProps> = ({
   isOpen,
   onClose,
-  currentFieldName
+  currentFieldName,
+  currentLanguage = 'ta'
 }) => {
+  const isEn = currentLanguage === 'en';
   const [inputQuery, setInputQuery] = useState<string>('');
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       sender: 'ai',
-      text: 'வணக்கம்! நான் FormSaathi AI உதவியாளன். படிவம் நிரப்புவது குறித்து உங்களுடைய கேள்விகளை இங்கே கேட்கலாம்.',
-      timestamp: 'இப்போது'
+      text: isEn
+        ? 'Hello! I am your FormSaathi AI assistant. Ask me any question about filling your form or finding information.'
+        : 'வணக்கம்! நான் FormSaathi AI உதவியாளன். படிவம் நிரப்புவது குறித்து உங்களுடைய கேள்விகளை இங்கே கேட்கலாம்.',
+      timestamp: 'Just now'
     }
   ]);
 
@@ -36,7 +42,7 @@ export const AskAI: React.FC<AskAIProps> = ({
       id: Date.now().toString(),
       sender: 'user',
       text: userText,
-      timestamp: 'இப்போது'
+      timestamp: 'Just now'
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -44,9 +50,11 @@ export const AskAI: React.FC<AskAIProps> = ({
 
     // Query Knowledge Base matching
     setTimeout(() => {
-      let responseText = "தயவுசெய்து இந்த தகவலை உங்கள் வங்கி அதிகாரியிடம் சரிபார்க்கவும். அதிகாரப்பூர்வ சான்றிதழில் உள்ள விவரங்களை மட்டும் படிவத்தில் நிரப்பவும்.";
-      const queryLower = userText.toLowerCase();
+      let responseText = isEn
+        ? "Please verify this information with your official bank representative or document before writing."
+        : "தயவுசெய்து இந்த தகவலை உங்கள் வங்கி அதிகாரியிடம் சரிபார்க்கவும். அதிகாரப்பூர்வ சான்றிதழில் உள்ள விவரங்களை மட்டும் படிவத்தில் நிரப்பவும்.";
 
+      const queryLower = userText.toLowerCase();
       const fields = Object.values(knowledgeBaseData.fields);
       const matchedField = fields.find((f) =>
         f.labels.some((lbl) => queryLower.includes(lbl.toLowerCase())) ||
@@ -55,20 +63,28 @@ export const AskAI: React.FC<AskAIProps> = ({
       );
 
       if (matchedField) {
-        responseText = `${matchedField.tamilName} குறித்த விவரம்:\n\n📍 எங்கே கிடைக்கும்: ${matchedField.tamil.where}\n\n📝 என்ன எழுத வேண்டும்: ${matchedField.tamil.what}`;
-      } else if (queryLower.includes('ifsc') || queryLower.includes('ஐஎப்எஸ்சி')) {
-        responseText = "IFSC Code உங்கள் வங்கி பாஸ்புக்கின் முதல் பக்கத்தில் அல்லது காசோலைத் தாளில் (Cheque Book) அச்சிடப்பட்டிருக்கும். இது 11 இலக்க எழுத்தெண் குறியீடு ஆகும்.";
-      } else if (queryLower.includes('aadhaar') || queryLower.includes('ஆதார்')) {
-        responseText = "ஆதார் எண் உங்கள் ஆதார் அட்டையின் முன் பக்கத்தில் கீழே உள்ள 12 இலக்க எண் ஆகும்.";
-      } else if (queryLower.includes('passbook') || queryLower.includes('பாஸ்புக்')) {
-        responseText = "வங்கி பாஸ்புக்கின் முதல் பக்கத்தில் கணக்கு எண், IFSC code, வங்கியின் கிளை பெயர் மற்றும் உங்கள் முகவரி இருக்கும்.";
+        responseText = isEn
+          ? `${matchedField.canonicalName} Details:\n\n📍 Where to find: ${matchedField.english.where}\n\n📝 What to write: ${matchedField.english.what}`
+          : `${matchedField.tamilName} குறித்த விவரம்:\n\n📍 எங்கே கிடைக்கும்: ${matchedField.tamil.where}\n\n📝 என்ன எழுத வேண்டும்: ${matchedField.tamil.what}`;
+      } else if (queryLower.includes('ifsc')) {
+        responseText = isEn
+          ? "IFSC code is an 11-character alphanumeric code printed on the top of your bank passbook first page or cheque book."
+          : "IFSC Code உங்கள் வங்கி பாஸ்புக்கின் முதல் பக்கத்தில் அல்லது காசோலைத் தாளில் (Cheque Book) அச்சிடப்பட்டிருக்கும். இது 11 இலக்க எழுத்தெண் குறியீடு ஆகும்.";
+      } else if (queryLower.includes('aadhaar')) {
+        responseText = isEn
+          ? "Aadhaar number is the 12-digit identification number printed at the bottom front of your Aadhaar card."
+          : "ஆதார் எண் உங்கள் ஆதார் அட்டையின் முன் பக்கத்தில் கீழே உள்ள 12 இலக்க எண் ஆகும்.";
+      } else if (queryLower.includes('passbook')) {
+        responseText = isEn
+          ? "Your bank passbook first page contains Account Number, IFSC Code, Branch Name, and Account Holder Address."
+          : "வங்கி பாஸ்புக்கின் முதல் பக்கத்தில் கணக்கு எண், IFSC code, வங்கியின் கிளை பெயர் மற்றும் உங்கள் முகவரி இருக்கும்.";
       }
 
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
         text: responseText,
-        timestamp: 'இப்போது'
+        timestamp: 'Just now'
       };
 
       setMessages((prev) => [...prev, aiMsg]);
@@ -91,10 +107,11 @@ export const AskAI: React.FC<AskAIProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-base flex items-center space-x-2">
-                <span>AI-யிடம் கேளுங்கள்</span>
-                <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-normal">Ask AI</span>
+                <span>{isEn ? 'Ask AI Assistant' : 'AI-யிடம் கேளுங்கள்'}</span>
               </h3>
-              <p className="text-xs text-teal-100">உடனடி தமிழ் விளக்கம்</p>
+              <p className="text-xs text-teal-100">
+                {isEn ? 'Instant Guidance Assistant' : 'உடனடி தமிழ் விளக்கம்'}
+              </p>
             </div>
           </div>
 
@@ -109,22 +126,22 @@ export const AskAI: React.FC<AskAIProps> = ({
         {/* Quick Suggested Questions */}
         <div className="bg-teal-50 border-b border-teal-100 p-3 overflow-x-auto flex space-x-2 no-scrollbar">
           <button
-            onClick={() => handleQuickQuestion("IFSC code எங்கே இருக்கும்?")}
+            onClick={() => handleQuickQuestion(isEn ? "Where can I find the IFSC code?" : "IFSC code எங்கே இருக்கும்?")}
             className="px-3 py-1 bg-white border border-teal-200 text-teal-800 text-xs font-semibold rounded-full shrink-0 hover:bg-teal-100 transition-colors"
           >
-            ❓ IFSC Code எங்கே இருக்கும்?
+            ❓ {isEn ? 'Where is IFSC Code?' : 'IFSC Code எங்கே இருக்கும்?'}
           </button>
           <button
-            onClick={() => handleQuickQuestion("ஆதார் எண் எங்கே இருக்கும்?")}
+            onClick={() => handleQuickQuestion(isEn ? "Where is my Aadhaar number?" : "ஆதார் எண் எங்கே இருக்கும்?")}
             className="px-3 py-1 bg-white border border-teal-200 text-teal-800 text-xs font-semibold rounded-full shrink-0 hover:bg-teal-100 transition-colors"
           >
-            ❓ ஆதார் எண் எங்கே இருக்கும்?
+            ❓ {isEn ? 'Where is Aadhaar No?' : 'ஆதார் எண் எங்கே இருக்கும்?'}
           </button>
           <button
-            onClick={() => handleQuickQuestion("பாஸ்புக்கில் என்ன விவரங்கள் இருக்கும்?")}
+            onClick={() => handleQuickQuestion(isEn ? "What info is on passbook?" : "பாஸ்புக்கில் என்ன விவரங்கள் இருக்கும்?")}
             className="px-3 py-1 bg-white border border-teal-200 text-teal-800 text-xs font-semibold rounded-full shrink-0 hover:bg-teal-100 transition-colors"
           >
-            ❓ பாஸ்புக் விவரங்கள்
+            ❓ {isEn ? 'Passbook Details' : 'பாஸ்புக் விவரங்கள்'}
           </button>
         </div>
 
@@ -167,7 +184,7 @@ export const AskAI: React.FC<AskAIProps> = ({
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="உங்கள் கேள்வியை தமிழில் கேட்கவும்..."
+            placeholder={isEn ? "Ask a question about your form..." : "உங்கள் கேள்வியை தமிழில் கேட்கவும்..."}
             className="flex-1 px-4 py-2.5 rounded-2xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
           <button

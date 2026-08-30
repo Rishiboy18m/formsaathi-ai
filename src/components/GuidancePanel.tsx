@@ -1,28 +1,37 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DetectedField, KnowledgeField } from '@/types/form';
+import { DetectedField, KnowledgeField, Language } from '@/types/form';
 import { VoiceButton } from './VoiceButton';
 import { AskAI } from './AskAI';
-import { Bot, MapPin, FileEdit, HelpCircle, AlertTriangle, Sparkles } from 'lucide-react';
+import { Bot, MapPin, FileEdit, HelpCircle, AlertTriangle } from 'lucide-react';
 import knowledgeBaseData from '@/data/knowledge-base.json';
 
 interface GuidancePanelProps {
   selectedField: DetectedField | null;
+  currentLanguage: Language;
 }
 
 const knowledgeFields = knowledgeBaseData.fields as Record<string, KnowledgeField>;
 
-export const GuidancePanel: React.FC<GuidancePanelProps> = ({ selectedField }) => {
+export const GuidancePanel: React.FC<GuidancePanelProps> = ({
+  selectedField,
+  currentLanguage
+}) => {
   const [isAskAiOpen, setIsAskAiOpen] = useState<boolean>(false);
+  const isEn = currentLanguage === 'en';
 
   if (!selectedField) {
     return (
       <div className="bg-white rounded-3xl p-6 border border-teal-100 shadow-xl text-center space-y-4 flex flex-col justify-center items-center min-h-[400px]">
         <Bot className="w-12 h-12 text-teal-600 animate-pulse" />
-        <h3 className="text-xl font-bold text-gray-900">புலத்தை தேர்ந்தெடுக்கவும்</h3>
+        <h3 className="text-xl font-bold text-gray-900">
+          {isEn ? 'Select a Form Field' : 'புலத்தை தேர்ந்தெடுக்கவும்'}
+        </h3>
         <p className="text-sm text-gray-500 max-w-xs">
-          படிவத்தில் உள்ள ஏதேனும் ஒரு பகுதியை அல்லது கீழே உள்ள பட்டியலில் உள்ள புலத்தைக் கிளிக் செய்யவும்.
+          {isEn
+            ? 'Tap or click any highlighted box on the form or choose a field from the list below.'
+            : 'படிவத்தில் உள்ள ஏதேனும் ஒரு பகுதியை அல்லது கீழே உள்ள பட்டியலில் உள்ள புலத்தைக் கிளிக் செய்யவும்.'}
         </p>
       </div>
     );
@@ -31,15 +40,19 @@ export const GuidancePanel: React.FC<GuidancePanelProps> = ({ selectedField }) =
   const kField = knowledgeFields[selectedField.fieldId];
   const isLowConfidence = selectedField.isLowConfidence || !kField || selectedField.confidenceLevel === 'Needs verification';
 
-  // Text content to speak out loud
-  const fullTextToSpeak = isLowConfidence
-    ? "இந்த புலத்தை துல்லியமாக கண்டறிய முடியவில்லை. தயவுசெய்து சரிபார்க்கவும்."
-    : `${selectedField.tamilName}. என்ன நிரப்ப வேண்டும்: ${kField.tamil.what} எங்கே கிடைக்கும்: ${kField.tamil.where} எங்கே எழுத வேண்டும்: ${kField.tamil.whereToWrite}`;
+  // Speech text
+  const fullTextToSpeak = isEn
+    ? (isLowConfidence
+        ? "Unable to determine the exact input area. Please verify with official documents."
+        : `${selectedField.canonicalName}. What to fill: ${kField.english.what} Where to find it: ${kField.english.where} Where to write: ${kField.english.whereToWrite}`)
+    : (isLowConfidence
+        ? "இந்த புலத்தை துல்லியமாக கண்டறிய முடியவில்லை. தயவுசெய்து சரிபார்க்கவும்."
+        : `${selectedField.tamilName}. என்ன நிரப்ப வேண்டும்: ${kField.tamil.what} எங்கே கிடைக்கும்: ${kField.tamil.where} எங்கே எழுத வேண்டும்: ${kField.tamil.whereToWrite}`);
 
   const confidenceBadgeText = selectedField.confidenceLevel || (selectedField.confidence >= 85 ? 'High confidence' : selectedField.confidence >= 70 ? 'Medium confidence' : 'Needs verification');
 
   return (
-    <div className="bg-white rounded-3xl p-5 sm:p-6 border border-teal-100 shadow-xl space-y-6 flex flex-col justify-between h-full">
+    <div className="bg-white rounded-3xl p-4 sm:p-6 border border-teal-100 shadow-xl space-y-5 sm:space-y-6 flex flex-col justify-between h-full">
       
       {/* Header */}
       <div>
@@ -50,13 +63,17 @@ export const GuidancePanel: React.FC<GuidancePanelProps> = ({ selectedField }) =
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-xl font-extrabold text-gray-900">🤖 AI படிவ உதவியாளர்</h2>
+                <h2 className="text-xl font-extrabold text-gray-900">
+                  {isEn ? '🤖 AI Form Assistant' : '🤖 AI படிவ உதவியாளர்'}
+                </h2>
               </div>
-              <p className="text-xs font-semibold text-teal-700">AI Form Assistant Guidance</p>
+              <p className="text-xs font-semibold text-teal-700">
+                {isEn ? 'Tamil & English Form Guidance' : 'AI Form Assistant Guidance'}
+              </p>
             </div>
           </div>
 
-          <VoiceButton textToSpeak={fullTextToSpeak} />
+          <VoiceButton textToSpeak={fullTextToSpeak} currentLanguage={currentLanguage} />
         </div>
 
         {/* Selected Field Label Badge */}
@@ -64,9 +81,11 @@ export const GuidancePanel: React.FC<GuidancePanelProps> = ({ selectedField }) =
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
             <div>
-              <span className="text-xs text-teal-700 font-semibold block">தேர்ந்தெடுக்கப்பட்ட பகுதி:</span>
+              <span className="text-xs text-teal-700 font-semibold block">
+                {isEn ? 'Selected Field:' : 'தேர்ந்தெடுக்கப்பட்ட பகுதி:'}
+              </span>
               <span className="text-lg font-extrabold text-teal-950">
-                {selectedField.tamilName} ({selectedField.canonicalName})
+                {isEn ? `${selectedField.canonicalName} (${selectedField.tamilName})` : `${selectedField.tamilName} (${selectedField.canonicalName})`}
               </span>
             </div>
           </div>
@@ -84,14 +103,20 @@ export const GuidancePanel: React.FC<GuidancePanelProps> = ({ selectedField }) =
 
       {/* Main Guidance Sections */}
       {isLowConfidence ? (
-        /* Low Confidence / Needs Verification Notice (Requirement #18) */
-        <div className="p-5 bg-amber-50 border-2 border-dashed border-amber-300 rounded-2xl space-y-3">
+        /* Low Confidence Warning Notice */
+        <div className="p-5 bg-amber-50 border-2 border-dashed border-amber-300 rounded-2xl space-y-2">
           <div className="flex items-center space-x-2 text-amber-900 font-bold text-base">
             <AlertTriangle className="w-6 h-6 text-amber-600 shrink-0" />
-            <span>இந்த புலத்தை துல்லியமாக கண்டறிய முடியவில்லை. தயவுசெய்து சரிபார்க்கவும்.</span>
+            <span>
+              {isEn
+                ? 'Unable to determine the exact input area. Please verify.'
+                : 'இந்த புலத்தை துல்லியமாக கண்டறிய முடியவில்லை. தயவுசெய்து சரிபார்க்கவும்.'}
+            </span>
           </div>
           <p className="text-xs text-amber-800 leading-relaxed">
-            Unable to determine the exact input area. Please verify with official records before writing inside this box.
+            {isEn
+              ? 'Please verify with official records before writing inside this box.'
+              : 'Unable to determine the exact input area. Please verify with official records before writing inside this box.'}
           </p>
         </div>
       ) : (
@@ -101,13 +126,13 @@ export const GuidancePanel: React.FC<GuidancePanelProps> = ({ selectedField }) =
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1 hover:border-teal-300 transition-colors">
             <div className="flex items-center space-x-2 text-teal-800 font-bold text-sm">
               <span className="text-base">📝</span>
-              <h3>WHAT — என்ன நிரப்ப வேண்டும்?</h3>
+              <h3>{isEn ? 'WHAT — What to fill?' : 'WHAT — என்ன நிரப்ப வேண்டும்?'}</h3>
             </div>
             <p className="text-base font-bold text-gray-900 pt-1 leading-snug">
-              {kField.tamil.what}
+              {isEn ? kField.english.what : kField.tamil.what}
             </p>
             <p className="text-xs text-gray-500 font-medium pt-0.5">
-              {kField.english.what}
+              {isEn ? kField.tamil.what : kField.english.what}
             </p>
           </div>
 
@@ -115,13 +140,13 @@ export const GuidancePanel: React.FC<GuidancePanelProps> = ({ selectedField }) =
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1 hover:border-teal-300 transition-colors">
             <div className="flex items-center space-x-2 text-teal-800 font-bold text-sm">
               <MapPin className="w-4 h-4 text-emerald-600" />
-              <h3>WHERE — எங்கே கிடைக்கும்?</h3>
+              <h3>{isEn ? 'WHERE — Where to find it?' : 'WHERE — எங்கே கிடைக்கும்?'}</h3>
             </div>
             <p className="text-base font-bold text-gray-900 pt-1 leading-snug">
-              {kField.tamil.where}
+              {isEn ? kField.english.where : kField.tamil.where}
             </p>
             <p className="text-xs text-gray-500 font-medium pt-0.5">
-              {kField.english.where}
+              {isEn ? kField.tamil.where : kField.english.where}
             </p>
           </div>
 
@@ -129,13 +154,13 @@ export const GuidancePanel: React.FC<GuidancePanelProps> = ({ selectedField }) =
           <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 space-y-1 hover:border-emerald-400 transition-colors">
             <div className="flex items-center space-x-2 text-emerald-900 font-bold text-sm">
               <FileEdit className="w-4 h-4 text-emerald-700" />
-              <h3>🟢 WHERE TO WRITE — எங்கே எழுத வேண்டும்?</h3>
+              <h3>{isEn ? '🟢 WHERE TO WRITE — Target Input Box' : '🟢 WHERE TO WRITE — எங்கே எழுத வேண்டும்?'}</h3>
             </div>
             <p className="text-base font-bold text-emerald-950 pt-1 leading-snug">
-              {kField.tamil.whereToWrite}
+              {isEn ? kField.english.whereToWrite : kField.tamil.whereToWrite}
             </p>
             <p className="text-xs text-emerald-800 font-medium pt-0.5">
-              {kField.english.whereToWrite}
+              {isEn ? kField.tamil.whereToWrite : kField.english.whereToWrite}
             </p>
           </div>
 
@@ -149,7 +174,9 @@ export const GuidancePanel: React.FC<GuidancePanelProps> = ({ selectedField }) =
           className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 text-teal-900 font-bold text-sm hover:bg-teal-100 transition-all flex items-center justify-center space-x-2 shadow-sm"
         >
           <HelpCircle className="w-5 h-5 text-teal-600" />
-          <span>❓ AI-யிடம் கேளுங்கள் (Ask AI Question)</span>
+          <span>
+            {isEn ? '❓ Ask AI Assistant' : '❓ AI-யிடம் கேளுங்கள் (Ask AI Question)'}
+          </span>
         </button>
       </div>
 
@@ -157,7 +184,8 @@ export const GuidancePanel: React.FC<GuidancePanelProps> = ({ selectedField }) =
       <AskAI
         isOpen={isAskAiOpen}
         onClose={() => setIsAskAiOpen(false)}
-        currentFieldName={selectedField.tamilName}
+        currentFieldName={isEn ? selectedField.canonicalName : selectedField.tamilName}
+        currentLanguage={currentLanguage}
       />
 
     </div>

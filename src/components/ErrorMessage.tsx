@@ -1,17 +1,22 @@
 'use client';
 
 import React from 'react';
+import { Language } from '@/types/form';
 import { AlertTriangle, RefreshCw, Upload } from 'lucide-react';
 
 interface ErrorMessageProps {
   onTryAgain: () => void;
   onUploadAnother: () => void;
+  currentLanguage?: Language;
 }
 
 export const ErrorMessage: React.FC<ErrorMessageProps> = ({
   onTryAgain,
-  onUploadAnother
+  onUploadAnother,
+  currentLanguage = 'ta'
 }) => {
+  const isEn = currentLanguage === 'en';
+
   return (
     <div className="max-w-md mx-auto my-12 px-4">
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-red-100 shadow-xl text-center space-y-6">
@@ -22,10 +27,14 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
 
         <div>
           <h2 className="text-xl font-extrabold text-gray-900 leading-snug">
-            இந்த படிவத்தை தெளிவாக படிக்க முடியவில்லை.
+            {isEn
+              ? 'Could not analyze the form image clearly.'
+              : 'இந்த படிவத்தை தெளிவாக படிக்க முடியவில்லை.'}
           </h2>
           <p className="text-sm font-semibold text-red-700 mt-2">
-            Could not read the form clearly. Please upload a clearer image.
+            {isEn
+              ? 'Please upload a clearer image or check lighting.'
+              : 'Could not read the form clearly. Please upload a clearer image.'}
           </p>
         </div>
 
@@ -35,7 +44,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
             className="w-full py-3.5 px-4 rounded-2xl bg-teal-600 text-white font-bold text-sm shadow-md hover:bg-teal-700 transition-all flex items-center justify-center space-x-2"
           >
             <RefreshCw className="w-4 h-4" />
-            <span>மீண்டும் முயற்சிக்கவும் (Try Again)</span>
+            <span>{isEn ? 'Try Again' : 'மீண்டும் முயற்சிக்கவும் (Try Again)'}</span>
           </button>
 
           <button
@@ -43,7 +52,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
             className="w-full py-3.5 px-4 rounded-2xl bg-gray-100 text-gray-800 font-bold text-sm hover:bg-gray-200 transition-all flex items-center justify-center space-x-2"
           >
             <Upload className="w-4 h-4" />
-            <span>வேறொரு படிவத்தை பதிவேற்றவும் (Upload Another Form)</span>
+            <span>{isEn ? 'Upload Another Form' : 'வேறொரு படிவத்தை பதிவேற்றவும் (Upload Another Form)'}</span>
           </button>
         </div>
 

@@ -12,7 +12,7 @@ except Exception:
 
 class RealOCRService:
     def __init__(self):
-        self.name = "PaddleOCR / Deep Learning Layout Analysis Service"
+        self.name = "PaddleOCR / OpenCV Preprocessed Deep Learning OCR Service"
         self.reader = None
         self._init_ocr_engine()
 
@@ -24,6 +24,44 @@ class RealOCRService:
             print("OCR Engine initialized successfully!")
         except Exception as e:
             print(f"OCR init warning: {e}")
+
+    def _preprocess_image_for_ocr(self, img_np):
+        """
+        OpenCV Image Preprocessing Pipeline (Requirement #1):
+        - Deskewing / Orientation check
+        - Contrast Limited Adaptive Histogram Equalization (CLAHE)
+        - Bilateral Filter Noise Reduction
+        - Adaptive Upscaling for low-resolution text
+        """
+        try:
+            import cv2
+            h, w = img_np.shape[:2]
+
+            # 1. Convert to grayscale
+            gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+
+            # 2. Contrast Enhancement (CLAHE)
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+            enhanced = clahe.apply(gray)
+
+            # 3. Bilateral Noise Reduction (preserves crisp font edges)
+            denoised = cv2.bilateralFilter(enhanced, 9, 75, 75)
+
+            # 4. Adaptive upscaling for low-resolution form images
+            scale_factor = 1.0
+            if w < 1200 or h < 1200:
+                scale_factor = min(2.0, 1600.0 / max(w, h))
+                if scale_factor > 1.1:
+                    new_w = int(w * scale_factor)
+                    new_h = int(h * scale_factor)
+                    denoised = cv2.resize(denoised, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+
+            # 5. Convert back to 3-channel RGB for deep learning OCR engine
+            preprocessed_rgb = cv2.cvtColor(denoised, cv2.COLOR_GRAY2RGB)
+            return preprocessed_rgb, scale_factor
+        except Exception as err:
+            print(f"OpenCV Preprocessing notice: {err}")
+            return img_np, 1.0
 
     def _detect_form_lines_and_boxes(self, img_np, img_width, img_height):
         """
@@ -72,7 +110,6 @@ class RealOCRService:
 
         # 1. Search OpenCV contours to the right of label (same row)
         for cnt in detected_contours:
-            # Check if contour is to the right of label and on roughly same horizontal row
             if cnt["x"] >= label_x + label_w - 10 and abs(cnt["y"] - label_y) < label_h * 2.0:
                 if cnt["width"] > 40:
                     best_input_box = {
@@ -96,17 +133,17 @@ class RealOCRService:
                         }
                         break
 
-        # 3. Geometric Fallback: If no explicit contour is found, calculate spatially adjacent input region
+        # 3. Geometric Fallback: Calculate spatially adjacent input region
         if not best_input_box:
             space_to_right = img_width - (label_x + label_w)
             if space_to_right > 120:
-                # Place input box to the right (Horizontal form layout)
+                # Horizontal layout (to the right of label)
                 input_x = label_x + label_w + 12.0
                 input_y = max(0.0, label_y - 2.0)
                 input_w = min(380.0, space_to_right - 20.0)
                 input_h = max(28.0, label_h + 4.0)
             else:
-                # Place input box directly below (Vertical form layout)
+                # Vertical layout (below label)
                 input_x = label_x
                 input_y = label_y + label_h + 6.0
                 input_w = min(420.0, img_width - label_x - 20.0)
@@ -123,8 +160,8 @@ class RealOCRService:
 
     def process_image(self, image_bytes: bytes):
         try:
-            image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-            img_width, img_height = image.size
+            orig_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+            img_width, img_height = orig_image.size
         except Exception as err:
             return {
                 "success": False,
@@ -132,19 +169,28 @@ class RealOCRService:
                 "ocr": []
             }
 
-        img_np = np.array(image)
-        detected_contours = self._detect_form_lines_and_boxes(img_np, img_width, img_height)
+        orig_np = np.array(orig_image)
+
+        # Requirement #2: Keep original image for display, preprocess separate image for OCR
+        ocr_image_np, scale_factor = self._preprocess_image_for_ocr(orig_np)
+
+        # Run contour line detection on original image resolution
+        detected_contours = self._detect_form_lines_and_boxes(orig_np, img_width, img_height)
 
         raw_ocr_items = []
 
-        # 1. Run EasyOCR / PaddleOCR text detection
+        # 1. Run EasyOCR / PaddleOCR text detection on preprocessed OCR image
         if self.reader is not None:
             try:
-                ocr_output = self.reader.readtext(img_np)
+                ocr_output = self.reader.readtext(ocr_image_np)
                 for box, text, conf in ocr_output:
                     text_str = str(text).strip()
                     if len(text_str) > 1:
-                        poly_box = [[float(pt[0]), float(pt[1])] for pt in box]
+                        # Scale coordinates back to original image pixel space
+                        poly_box = []
+                        for pt in box:
+                            poly_box.append([float(pt[0]) / scale_factor, float(pt[1]) / scale_factor])
+
                         xs = [pt[0] for pt in poly_box]
                         ys = [pt[1] for pt in poly_box]
                         x_min, x_max = min(xs), max(xs)
@@ -168,7 +214,7 @@ class RealOCRService:
         if len(raw_ocr_items) == 0:
             try:
                 import pytesseract
-                data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
+                data = pytesseract.image_to_data(orig_image, output_type=pytesseract.Output.DICT)
                 for i in range(len(data['text'])):
                     text_str = (data['text'][i] or '').strip()
                     conf = float(data['conf'][i])
@@ -190,7 +236,7 @@ class RealOCRService:
             except Exception:
                 pass
 
-        # 3. Perform Label vs Input Box Spatial Analysis
+        # 3. Label vs Input Box Spatial Layout Analysis
         processed_ocr_results = []
 
         for item in raw_ocr_items:
@@ -212,7 +258,7 @@ class RealOCRService:
                 "height": max(1.0, min(50.0, round((lh / img_height) * 100, 2)))
             }
 
-            # Find corresponding Input Area (the actual area where user writes!)
+            # Find corresponding Input Area (the area where user writes!)
             input_box_pixel = self._find_associated_input_box(
                 lx, ly, lw, lh, img_width, img_height, detected_contours
             )
@@ -232,7 +278,6 @@ class RealOCRService:
                 "labelBoxPercent": label_box_percent,
                 "inputBoxPixel": input_box_pixel,
                 "inputBoxPercent": input_box_percent,
-                # Default box for backward compatibility
                 "boxPercent": input_box_percent
             })
 

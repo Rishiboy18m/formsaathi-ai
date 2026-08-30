@@ -4,12 +4,12 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
-from ocr_service import ocr_engine
+from vlm_service import vlm_service
 
 app = FastAPI(
-    title="FormSaathi AI Real OCR Backend",
-    description="FastAPI service for FormSaathi AI form analysis, OCR text extraction, and bounding box polygon detection",
-    version="2.0.0"
+    title="FormSaathi AI Vision-Language Model Serverless GPU Backend",
+    description="FastAPI service for FormSaathi AI form analysis using Vision-Language Models (Qwen2.5-VL) with separate label_box and input_area layout analysis",
+    version="3.0.0"
 )
 
 # Enable CORS for Next.js frontend communication
@@ -34,8 +34,8 @@ class ClassifyResponse(BaseModel):
 def health_check():
     return {
         "status": "ok",
-        "service": "FormSaathi AI Real OCR FastAPI Backend",
-        "engine": ocr_engine.name
+        "service": "FormSaathi AI Vision-Language Model FastAPI Backend",
+        "engine": vlm_service.name
     }
 
 @app.post("/analyze-form")
@@ -48,18 +48,22 @@ async def analyze_form(file: UploadFile = File(...)):
     if len(contents) == 0:
         raise HTTPException(status_code=400, detail="Empty file uploaded.")
 
-    ocr_res = ocr_engine.process_image(contents)
+    vlm_res = vlm_service.process_form(contents)
 
-    if not ocr_res.get("success"):
-        raise HTTPException(status_code=422, detail=ocr_res.get("error", "Could not analyze the form."))
+    if not vlm_res.get("success"):
+        raise HTTPException(status_code=422, detail=vlm_res.get("error", "Could not analyze the form image."))
 
     return {
         "success": True,
         "filename": file.filename,
-        "imageWidth": ocr_res["imageWidth"],
-        "imageHeight": ocr_res["imageHeight"],
-        "fullText": ocr_res["fullText"],
-        "ocr": ocr_res["ocr"]
+        "image_width": vlm_res["image_width"],
+        "image_height": vlm_res["image_height"],
+        "imageWidth": vlm_res["image_width"],
+        "imageHeight": vlm_res["image_height"],
+        "fullText": vlm_res.get("fullText", ""),
+        "sections": vlm_res.get("sections", []),
+        "fields": vlm_res["fields"],
+        "ocr": vlm_res["fields"]
     }
 
 @app.post("/classify-field", response_model=ClassifyResponse)

@@ -1,24 +1,29 @@
 import { mapOcrToDetectedFields, RawOcrItem } from './fieldMapper';
 import { AnalysisResult } from '@/types/form';
+import { compressImageForUpload } from '@/utils/imageCompressor';
 
 export async function analyzeUploadedForm(
   imageSource: File | string
 ): Promise<AnalysisResult> {
   let imageUrl: string;
+  let fileToUpload: File | null = null;
+
   if (typeof imageSource === 'string') {
     imageUrl = imageSource;
   } else {
-    imageUrl = URL.createObjectURL(imageSource);
+    // Compress high-res smartphone photo before sending (10x upload speedup!)
+    fileToUpload = await compressImageForUpload(imageSource);
+    imageUrl = URL.createObjectURL(fileToUpload);
   }
 
   let ocrItems: RawOcrItem[] = [];
   let isSuccess = false;
 
-  // REAL UPLOAD ONLY = Send actual image to VLM Vision Model backend
-  if (typeof imageSource !== 'string' && imageSource instanceof File) {
+  // REAL UPLOAD ONLY = Send compressed image to VLM Vision Model backend
+  if (fileToUpload) {
     try {
       const formData = new FormData();
-      formData.append('file', imageSource, imageSource.name);
+      formData.append('file', fileToUpload, fileToUpload.name);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 second timeout

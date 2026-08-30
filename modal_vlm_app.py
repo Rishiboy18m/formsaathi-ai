@@ -18,16 +18,16 @@ vlm_image = modal.Image.debian_slim(python_version="3.11").pip_install(
     "uvicorn"
 )
 
-@app.cls(gpu="A10G", image=vlm_image, timeout=120)
+@app.cls(gpu="A10G", image=vlm_image, timeout=60)
 class FormSaathiVLM:
     @modal.build()
     def download_model(self):
-        # Pre-download Qwen2.5-VL model weights into Modal container image
         from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
-        print("Downloading Qwen2.5-VL-7B-Instruct weights...")
+        import torch
+        print("Downloading Qwen2.5-VL-7B-Instruct weights with FP16 precision...")
         Qwen2_5_VLForConditionalGeneration.from_pretrained(
             "Qwen/Qwen2.5-VL-7B-Instruct",
-            torch_dtype="auto",
+            torch_dtype=torch.float16,
             device_map="auto"
         )
         AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-7B-Instruct")
@@ -35,9 +35,11 @@ class FormSaathiVLM:
     @modal.enter()
     def load_model(self):
         from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
+        import torch
+        # FP16 Half Precision for 2x-3x faster GPU inference speed
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             "Qwen/Qwen2.5-VL-7B-Instruct",
-            torch_dtype="auto",
+            torch_dtype=torch.float16,
             device_map="auto"
         )
         self.processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-7B-Instruct")
@@ -54,6 +56,11 @@ class FormSaathiVLM:
         img_bytes = base64.b64decode(image_base64)
         image = Image.open(io.BytesIO(img_bytes)).convert("RGB")
         w, h = image.size
+
+        # Resize image for fast vision tokens processing
+        max_dim = 1200
+        if w > max_dim or h > max_dim:
+            image.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
 
         prompt_text = (
             "Analyze this physical paper form image carefully. Identify all form sections, field labels, "
@@ -95,7 +102,9 @@ class FormSaathiVLM:
             return_tensors="pt"
         ).to("cuda")
 
-        generated_ids = self.model.generate(**inputs, max_new_tokens=1024)
+        with torch.no_grad():
+            generated_ids = self.model.generate(**inputs, max_new_tokens=512, do_sample=False)
+
         generated_ids_trimmed = [
             out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
         ]

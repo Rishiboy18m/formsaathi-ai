@@ -13,12 +13,13 @@ export interface RawOcrItem {
 }
 
 export function mapOcrToDetectedFields(
-  ocrItems: RawOcrItem[]
+  ocrItems: RawOcrItem[],
+  isDemo: boolean = false
 ): DetectedField[] {
   const detectedFields: DetectedField[] = [];
   const processedFieldIds = new Set<string>();
 
-  // Process REAL OCR/VLM items ONLY
+  // 1. Process REAL OCR/VLM items with Label vs Input Area Spatial Analysis
   if (ocrItems && ocrItems.length > 0) {
     for (const item of ocrItems) {
       const textRaw = item.text || '';
@@ -95,6 +96,62 @@ export function mapOcrToDetectedFields(
         }
       }
     }
+  }
+
+  // 2. DEMO MODE ONLY: Pre-configured sample layouts for instant testing
+  if (isDemo && detectedFields.length === 0) {
+    const demoItems: Array<{
+      id: string;
+      labelBox: BoundingBox;
+      inputBox: BoundingBox;
+      conf: number;
+    }> = [
+      { id: "FULL_NAME", labelBox: { x: 5, y: 15, width: 30, height: 5 }, inputBox: { x: 38, y: 15, width: 55, height: 6 }, conf: 98 },
+      { id: "ACCOUNT_NUMBER", labelBox: { x: 5, y: 25, width: 30, height: 5 }, inputBox: { x: 38, y: 25, width: 55, height: 6 }, conf: 96 },
+      { id: "AADHAAR_NUMBER", labelBox: { x: 5, y: 35, width: 30, height: 5 }, inputBox: { x: 38, y: 35, width: 55, height: 6 }, conf: 94 },
+      { id: "DATE_OF_BIRTH", labelBox: { x: 5, y: 45, width: 20, height: 5 }, inputBox: { x: 26, y: 45, width: 22, height: 6 }, conf: 97 },
+      { id: "PHONE_NUMBER", labelBox: { x: 52, y: 45, width: 20, height: 5 }, inputBox: { x: 73, y: 45, width: 22, height: 6 }, conf: 95 },
+      { id: "IFSC_CODE", labelBox: { x: 5, y: 55, width: 20, height: 5 }, inputBox: { x: 26, y: 55, width: 22, height: 6 }, conf: 93 },
+      { id: "PAN_NUMBER", labelBox: { x: 52, y: 55, width: 20, height: 5 }, inputBox: { x: 73, y: 55, width: 22, height: 6 }, conf: 92 },
+      { id: "ADDRESS", labelBox: { x: 5, y: 65, width: 30, height: 5 }, inputBox: { x: 38, y: 65, width: 55, height: 8 }, conf: 91 },
+      { id: "SIGNATURE", labelBox: { x: 52, y: 77, width: 20, height: 5 }, inputBox: { x: 73, y: 77, width: 22, height: 8 }, conf: 89 },
+      { id: "UNKNOWN_FIELD", labelBox: { x: 5, y: 77, width: 20, height: 5 }, inputBox: { x: 26, y: 77, width: 22, height: 8 }, conf: 45 }
+    ];
+
+    demoItems.forEach((item) => {
+      if (item.id === "UNKNOWN_FIELD") {
+        detectedFields.push({
+          fieldId: "UNKNOWN_FIELD",
+          canonicalName: "Unclear Field / கூடுதல் விவரம்",
+          tamilName: "அடையாளம் தெரியாத பகுதி",
+          confidence: 45,
+          confidenceLevel: 'Needs verification',
+          boundingBox: item.inputBox,
+          labelBox: item.labelBox,
+          inputBox: item.inputBox,
+          isLowConfidence: true,
+          rawText: "Unclear text",
+          userValue: ""
+        });
+      } else {
+        const kField = knowledgeFields[item.id];
+        if (kField) {
+          detectedFields.push({
+            fieldId: item.id,
+            canonicalName: kField.canonicalName,
+            tamilName: kField.tamilName,
+            confidence: item.conf,
+            confidenceLevel: 'High confidence',
+            boundingBox: item.inputBox,
+            labelBox: item.labelBox,
+            inputBox: item.inputBox,
+            isLowConfidence: false,
+            rawText: kField.canonicalName,
+            userValue: kField.sampleValue
+          });
+        }
+      }
+    });
   }
 
   return detectedFields;

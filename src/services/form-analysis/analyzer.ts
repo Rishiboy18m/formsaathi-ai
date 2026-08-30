@@ -1,17 +1,33 @@
 import { mapOcrToDetectedFields, RawOcrItem } from './fieldMapper';
 import { AnalysisResult } from '@/types/form';
 import { compressImageForUpload } from '@/utils/imageCompressor';
+import { generateSampleFormSvgDataUrl } from '@/utils/sampleFormGenerator';
 
 export async function analyzeUploadedForm(
-  imageSource: File | string
+  imageSource: File | string,
+  isDemo: boolean = false
 ): Promise<AnalysisResult> {
   let imageUrl: string;
   let fileToUpload: File | null = null;
 
+  // 1. DEMO MODE
+  if (isDemo) {
+    const sampleUrl = typeof imageSource === 'string' ? imageSource : generateSampleFormSvgDataUrl('account');
+    const detectedFields = mapOcrToDetectedFields([], true);
+    return {
+      formId: `demo_form_${Date.now()}`,
+      formTitle: "மாதிரி வங்கி படிவம் (Sample Demo Bank Form)",
+      originalImageUrl: sampleUrl,
+      detectedFields,
+      qualityScore: 95,
+      timestamp: new Date().toISOString(),
+      isDemo: true
+    };
+  }
+
   if (typeof imageSource === 'string') {
     imageUrl = imageSource;
   } else {
-    // Compress high-res smartphone photo before sending (10x upload speedup!)
     fileToUpload = await compressImageForUpload(imageSource);
     imageUrl = URL.createObjectURL(fileToUpload);
   }
@@ -19,7 +35,7 @@ export async function analyzeUploadedForm(
   let ocrItems: RawOcrItem[] = [];
   let isSuccess = false;
 
-  // REAL UPLOAD ONLY = Send compressed image to VLM Vision Model backend
+  // REAL UPLOAD = Send actual compressed image to VLM Vision Model backend
   if (fileToUpload) {
     try {
       const formData = new FormData();
@@ -68,8 +84,8 @@ export async function analyzeUploadedForm(
     }
   }
 
-  // Map real OCR/VLM output ONLY (Zero demo fallbacks)
-  const detectedFields = mapOcrToDetectedFields(ocrItems);
+  // Map real OCR/VLM output
+  const detectedFields = mapOcrToDetectedFields(ocrItems, false);
 
   if (detectedFields.length === 0 || !isSuccess) {
     throw new Error("Unable to analyze the form. Could not detect valid fields on the uploaded image.");

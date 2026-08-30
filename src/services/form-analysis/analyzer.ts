@@ -2,14 +2,13 @@ import { mapOcrToDetectedFields, RawOcrItem } from './fieldMapper';
 import { AnalysisResult } from '@/types/form';
 import { compressImageForUpload } from '@/utils/imageCompressor';
 import { generateSampleFormSvgDataUrl } from '@/utils/sampleFormGenerator';
-import { TesseractOcrAdapter, ExtendedOcrItem } from '../ocr/tesseractAdapter';
 
 export async function analyzeUploadedForm(
   imageSource: File | string,
   isDemo: boolean = false
 ): Promise<AnalysisResult> {
   let imageUrl: string;
-  let fileToProcess: File | string = imageSource;
+  let fileToUpload: File | null = null;
 
   // 1. DEMO MODE
   if (isDemo) {
@@ -30,10 +29,10 @@ export async function analyzeUploadedForm(
     imageUrl = imageSource;
   } else {
     try {
-      fileToProcess = await compressImageForUpload(imageSource);
-      imageUrl = URL.createObjectURL(fileToProcess);
+      fileToUpload = await compressImageForUpload(imageSource);
+      imageUrl = URL.createObjectURL(fileToUpload);
     } catch {
-      fileToProcess = imageSource;
+      fileToUpload = imageSource;
       imageUrl = URL.createObjectURL(imageSource);
     }
   }
@@ -41,33 +40,14 @@ export async function analyzeUploadedForm(
   let ocrItems: RawOcrItem[] = [];
   let isSuccess = false;
 
-  // 2. REAL TESSERACT.JS OCR EXECUTION ON UPLOADED IMAGE
-  try {
-    const tesseractAdapter = new TesseractOcrAdapter();
-    const tesseractRes = await tesseractAdapter.processImage(fileToProcess);
-
-    if (tesseractRes.success && tesseractRes.words && tesseractRes.words.length > 0) {
-      ocrItems = (tesseractRes.words as ExtendedOcrItem[]).map((item) => ({
-        text: item.text,
-        confidence: item.confidence / 100.0,
-        labelBoxPercent: item.labelBoxPercent || item.boundingBox,
-        inputBoxPercent: item.inputBoxPercent || item.boundingBox,
-        boundingBoxPercent: item.boundingBox
-      }));
-      isSuccess = true;
-    }
-  } catch (tesseractErr) {
-    console.warn('Tesseract.js OCR execution error:', tesseractErr);
-  }
-
-  // 3. Optional VLM API Route fallback if Tesseract returned zero results
-  if (!isSuccess && ocrItems.length === 0 && typeof imageSource !== 'string' && imageSource instanceof File) {
+  // 2. REAL PADDLEOCR BACKEND PIPELINE
+  if (fileToUpload) {
     try {
       const formData = new FormData();
-      formData.append('file', imageSource, imageSource.name);
+      formData.append('file', fileToUpload, fileToUpload.name);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000);
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
 
       const response = await fetch('/api/analyze-form', {
         method: 'POST',
@@ -82,28 +62,31 @@ export async function analyzeUploadedForm(
         if (resData.success && Array.isArray(resData.ocr) && resData.ocr.length > 0) {
           ocrItems = resData.ocr;
           isSuccess = true;
+        } else if (resData.success && Array.isArray(resData.fields) && resData.fields.length > 0) {
+          ocrItems = resData.fields;
+          isSuccess = true;
         }
       }
-    } catch (apiErr) {
-      console.warn('API route fallback notice:', apiErr);
+    } catch (backendErr) {
+      console.warn('Real PaddleOCR backend request failed:', backendErr);
     }
   }
 
-  // Map real Tesseract.js OCR output to knowledge base fields & separate input areas
+  // 3. Map real PaddleOCR output ONLY (Zero demo fallbacks for real uploads)
   const detectedFields = mapOcrToDetectedFields(ocrItems, false);
 
   if (detectedFields.length === 0 || !isSuccess) {
-    throw new Error("Unable to analyze the form with Tesseract.js. Could not detect valid text fields on the uploaded image.");
+    throw new Error("Unable to analyze the form with PaddleOCR. Could not detect readable fields on the uploaded image. Please ensure the form is well-lit and clear.");
   }
 
   return {
     formId: `form_${Date.now()}`,
     formTitle: typeof imageSource !== 'string' && imageSource.name
       ? imageSource.name
-      : "Uploaded Physical Form (Tesseract.js Test)",
+      : "Uploaded Physical Form (PaddleOCR Analysis)",
     originalImageUrl: imageUrl,
     detectedFields,
-    qualityScore: isSuccess ? 88 : 50,
+    qualityScore: 90,
     timestamp: new Date().toISOString(),
     isDemo: false
   };

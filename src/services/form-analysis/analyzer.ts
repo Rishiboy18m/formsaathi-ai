@@ -40,16 +40,16 @@ export async function analyzeUploadedForm(
   let ocrItems: RawOcrItem[] = [];
   let isSuccess = false;
 
-  // REAL UPLOAD = Send image to VLM Vision Model backend
+  // REAL UPLOAD = Send image to Next.js API route (/api/analyze-form)
   if (fileToUpload) {
     try {
       const formData = new FormData();
       formData.append('file', fileToUpload, fileToUpload.name);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout for complex forms
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
 
-      const response = await fetch('http://127.0.0.1:8000/analyze-form', {
+      const response = await fetch('/api/analyze-form', {
         method: 'POST',
         body: formData,
         signal: controller.signal
@@ -62,10 +62,13 @@ export async function analyzeUploadedForm(
         if (resData.success && Array.isArray(resData.ocr) && resData.ocr.length > 0) {
           ocrItems = resData.ocr;
           isSuccess = true;
+        } else if (resData.success && Array.isArray(resData.fields) && resData.fields.length > 0) {
+          ocrItems = resData.fields;
+          isSuccess = true;
         }
       }
     } catch (backendErr) {
-      console.warn('Real VLM backend call failed or timed out:', backendErr);
+      console.warn('Real VLM API route call failed or timed out:', backendErr);
     }
   }
 

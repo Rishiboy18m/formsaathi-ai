@@ -13,7 +13,9 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onStartAnalysis }) =
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -46,9 +48,8 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onStartAnalysis }) =
     setPreviewUrl(null);
     setIsDemo(false);
     setErrorMsg(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
   const handleAnalyze = () => {
@@ -58,21 +59,21 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onStartAnalysis }) =
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
+    <div className="max-w-3xl mx-auto px-2 sm:px-4 py-4 sm:py-12">
       
       {/* Title */}
-      <div className="text-center space-y-3 mb-8">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+      <div className="text-center space-y-2 mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">
           படிவத்தின் புகைப்படத்தை பதிவேற்றவும்
         </h1>
-        <p className="text-sm sm:text-base text-gray-600">
+        <p className="text-xs sm:text-base text-gray-600">
           Upload or scan your physical paper form for AI analysis
         </p>
       </div>
 
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-teal-100 shadow-xl space-y-6">
+      <div className="bg-white rounded-3xl p-4 sm:p-8 border border-teal-100 shadow-xl space-y-5 sm:space-y-6">
         
-        {/* File Input Hidden */}
+        {/* File Input Hidden (Standard file picker) */}
         <input
           ref={fileInputRef}
           type="file"
@@ -82,44 +83,61 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onStartAnalysis }) =
           id="form-file-input"
         />
 
-        {/* Action Buttons Row when no file selected */}
+        {/* Camera Input Hidden (Direct native camera access on mobile) */}
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleFileChange}
+          className="hidden"
+          id="form-camera-input"
+        />
+
+        {/* Action Buttons Grid */}
         {!previewUrl ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             
-            {/* Take Photo */}
+            {/* Take Photo (Mobile Camera Trigger) */}
             <button
-              onClick={() => fileInputRef.current?.click()}
-              className="p-5 rounded-2xl border-2 border-dashed border-teal-300 bg-teal-50/50 hover:bg-teal-100/60 hover:border-teal-500 transition-all text-center flex flex-col items-center justify-center space-y-2 group"
+              onClick={() => cameraInputRef.current?.click()}
+              className="p-4 sm:p-5 rounded-2xl border-2 border-dashed border-teal-400 bg-teal-50/70 hover:bg-teal-100/80 transition-all text-center flex sm:flex-col items-center justify-center space-x-3 sm:space-x-0 sm:space-y-2 active:scale-98 min-h-[56px]"
             >
-              <div className="w-12 h-12 rounded-xl bg-teal-600 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Camera className="w-6 h-6" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0">
+                <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <span className="font-bold text-gray-900 text-sm">📷 Take Photo</span>
-              <span className="text-xs text-gray-500">புகைப்படம் எடுக்கவும்</span>
+              <div className="text-left sm:text-center">
+                <span className="font-bold text-gray-900 text-sm block">📷 Take Photo</span>
+                <span className="text-xs text-teal-700">மொபைல் கேமரா (Camera)</span>
+              </div>
             </button>
 
             {/* Upload Image */}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="p-5 rounded-2xl border-2 border-dashed border-teal-300 bg-teal-50/50 hover:bg-teal-100/60 hover:border-teal-500 transition-all text-center flex flex-col items-center justify-center space-y-2 group"
+              className="p-4 sm:p-5 rounded-2xl border-2 border-dashed border-teal-300 bg-teal-50/40 hover:bg-teal-100/60 transition-all text-center flex sm:flex-col items-center justify-center space-x-3 sm:space-x-0 sm:space-y-2 active:scale-98 min-h-[56px]"
             >
-              <div className="w-12 h-12 rounded-xl bg-teal-600 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Upload className="w-6 h-6" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0">
+                <Upload className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <span className="font-bold text-gray-900 text-sm">📁 Upload Image</span>
-              <span className="text-xs text-gray-500">படத்தை பதிவேற்றவும்</span>
+              <div className="text-left sm:text-center">
+                <span className="font-bold text-gray-900 text-sm block">📁 Upload Image</span>
+                <span className="text-xs text-gray-500">படத்தை தேர்வு செய்யவும்</span>
+              </div>
             </button>
 
             {/* Upload PDF */}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="p-5 rounded-2xl border-2 border-dashed border-teal-300 bg-teal-50/50 hover:bg-teal-100/60 hover:border-teal-500 transition-all text-center flex flex-col items-center justify-center space-y-2 group"
+              className="p-4 sm:p-5 rounded-2xl border-2 border-dashed border-teal-300 bg-teal-50/40 hover:bg-teal-100/60 transition-all text-center flex sm:flex-col items-center justify-center space-x-3 sm:space-x-0 sm:space-y-2 active:scale-98 min-h-[56px]"
             >
-              <div className="w-12 h-12 rounded-xl bg-teal-600 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                <FileText className="w-6 h-6" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <span className="font-bold text-gray-900 text-sm">📄 Upload PDF</span>
-              <span className="text-xs text-gray-500">PDF பதிவேற்றவும்</span>
+              <div className="text-left sm:text-center">
+                <span className="font-bold text-gray-900 text-sm block">📄 Upload PDF</span>
+                <span className="text-xs text-gray-500">PDF ஆவணம்</span>
+              </div>
             </button>
 
           </div>
@@ -148,13 +166,13 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onStartAnalysis }) =
               </button>
             </div>
 
-            {/* Image Preview Box */}
-            <div className="relative rounded-2xl overflow-hidden border border-gray-200 bg-slate-100 flex items-center justify-center max-h-96">
+            {/* Mobile-optimized image preview box */}
+            <div className="relative rounded-2xl overflow-hidden border border-gray-200 bg-slate-100 flex items-center justify-center max-h-[350px] sm:max-h-[450px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewUrl}
                 alt="Uploaded form preview"
-                className="max-h-96 w-auto object-contain"
+                className="max-h-[350px] sm:max-h-[450px] w-auto object-contain"
               />
             </div>
           </div>
@@ -162,20 +180,20 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onStartAnalysis }) =
 
         {/* Demo Mode Button Option */}
         {!previewUrl && (
-          <div className="pt-2">
+          <div className="pt-1">
             <button
               onClick={handleLoadSampleForm}
-              className="w-full p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 hover:bg-amber-100/70 transition-all flex items-center justify-between text-left"
+              className="w-full p-3.5 sm:p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 hover:bg-amber-100/70 transition-all flex items-center justify-between text-left active:scale-98"
             >
               <div className="flex items-center space-x-3">
                 <Sparkles className="w-5 h-5 text-amber-600 shrink-0" />
                 <div>
-                  <p className="text-sm font-bold">மாதிரி படிவத்துடன் சோதிக்கவும் (Demo Mode)</p>
-                  <p className="text-xs text-amber-700">Try instant AI analysis with pre-loaded Tamil/English bank form</p>
+                  <p className="text-xs sm:text-sm font-bold">மாதிரி படிவத்துடன் சோதிக்கவும் (Demo Mode)</p>
+                  <p className="text-[11px] sm:text-xs text-amber-700">Try instant analysis with pre-loaded Tamil/English bank form</p>
                 </div>
               </div>
-              <span className="text-xs font-bold bg-amber-200 text-amber-800 px-3 py-1 rounded-lg shrink-0">
-                Load Sample
+              <span className="text-xs font-bold bg-amber-200 text-amber-800 px-2.5 py-1 rounded-lg shrink-0 ml-2">
+                Sample
               </span>
             </button>
           </div>
@@ -190,11 +208,11 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onStartAnalysis }) =
         )}
 
         {/* Privacy Message */}
-        <div className="bg-teal-50/70 border border-teal-200/60 rounded-2xl p-4 flex items-start space-x-3">
+        <div className="bg-teal-50/70 border border-teal-200/60 rounded-2xl p-3.5 sm:p-4 flex items-start space-x-3">
           <ShieldCheck className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" />
           <div className="text-xs sm:text-sm text-teal-900">
             <p className="font-bold">உங்கள் ஆவணம் பாதுகாப்பாக கையாளப்படும்.</p>
-            <p className="text-teal-700 text-xs mt-0.5">
+            <p className="text-teal-700 text-[11px] sm:text-xs mt-0.5">
               Your document is handled securely. Uploaded files are processed in-memory and are never stored permanently.
             </p>
           </div>
@@ -204,7 +222,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onStartAnalysis }) =
         {previewUrl && (
           <button
             onClick={handleAnalyze}
-            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-bold text-lg shadow-lg shadow-teal-600/30 hover:from-teal-700 hover:to-emerald-700 active:scale-[0.99] transition-all flex items-center justify-center space-x-2"
+            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-bold text-base sm:text-lg shadow-lg shadow-teal-600/30 hover:from-teal-700 hover:to-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center space-x-2"
           >
             <Sparkles className="w-5 h-5" />
             <span>Analyze Form (பகுப்பாய்வு செய்)</span>

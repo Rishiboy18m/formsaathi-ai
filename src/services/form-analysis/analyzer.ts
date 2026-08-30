@@ -16,28 +16,34 @@ export async function analyzeUploadedForm(
 
   // REAL UPLOAD ONLY = Send actual image to VLM Vision Model backend
   if (typeof imageSource !== 'string' && imageSource instanceof File) {
-    const formData = new FormData();
-    formData.append('file', imageSource, imageSource.name);
+    try {
+      const formData = new FormData();
+      formData.append('file', imageSource, imageSource.name);
 
-    const response = await fetch('http://127.0.0.1:8000/analyze-form', {
-      method: 'POST',
-      body: formData
-    });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 second timeout
 
-    if (!response.ok) {
-      throw new Error(`Real VLM backend failed with status ${response.status}. Could not analyze image.`);
-    }
+      const response = await fetch('http://127.0.0.1:8000/analyze-form', {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal
+      });
 
-    const resData = await response.json();
-    if (resData.success && Array.isArray(resData.ocr) && resData.ocr.length > 0) {
-      ocrItems = resData.ocr;
-      isSuccess = true;
-    } else {
-      throw new Error("VLM model could not detect readable fields on the uploaded image.");
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const resData = await response.json();
+        if (resData.success && Array.isArray(resData.ocr) && resData.ocr.length > 0) {
+          ocrItems = resData.ocr;
+          isSuccess = true;
+        }
+      }
+    } catch (backendErr) {
+      console.warn('Real VLM backend call failed or timed out:', backendErr);
     }
   }
 
-  // Client-side fallback process for image URLs
+  // Client-side Tesseract OCR fallback if backend unreachable
   if (!isSuccess && ocrItems.length === 0) {
     try {
       const { TesseractOcrAdapter } = await import('../ocr/tesseractAdapter');

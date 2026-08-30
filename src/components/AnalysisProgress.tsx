@@ -15,8 +15,8 @@ interface Step {
 
 const STAGES: Step[] = [
   { id: 1, labelTamil: 'ஆவணத்தைப் பதிவேற்றுகிறது (Uploading...)', labelEnglish: 'Uploading image to backend' },
-  { id: 2, labelTamil: 'PaddleOCR உரையைப் படிக்கிறது (Running PaddleOCR...)', labelEnglish: 'Running real OCR text recognition' },
-  { id: 3, labelTamil: 'தகவல் புலங்களை அடையாளம் காணுதல் (Detecting fields...)', labelEnglish: 'Mapping field bounding box coordinates' },
+  { id: 2, labelTamil: 'VLM மாடல் உரையைப் படிக்கிறது (Running Vision Model...)', labelEnglish: 'Running Qwen2.5-VL Vision-Language Model' },
+  { id: 3, labelTamil: 'தகவல் புலங்களை அடையாளம் காணுதல் (Detecting fields...)', labelEnglish: 'Mapping label_box vs input_area coordinates' },
   { id: 4, labelTamil: 'தமிழ் வழிகாட்டுதலை தயாரித்தல் (Preparing Tamil guidance...)', labelEnglish: 'Fetching trusted Tamil explanations' }
 ];
 
@@ -28,22 +28,22 @@ export const AnalysisProgress: React.FC<AnalysisProgressProps> = ({ onComplete }
     const timer1 = setTimeout(() => {
       setCurrentStep(2);
       setProgressPercent(45);
-    }, 500);
+    }, 400);
 
     const timer2 = setTimeout(() => {
       setCurrentStep(3);
       setProgressPercent(75);
-    }, 1100);
+    }, 900);
 
     const timer3 = setTimeout(() => {
       setCurrentStep(4);
       setProgressPercent(95);
-    }, 1700);
+    }, 1400);
 
     const timer4 = setTimeout(() => {
       setProgressPercent(100);
       onComplete();
-    }, 2200);
+    }, 1800);
 
     return () => {
       clearTimeout(timer1);
@@ -70,7 +70,7 @@ export const AnalysisProgress: React.FC<AnalysisProgressProps> = ({ onComplete }
             உங்கள் படிவத்தை AI பகுப்பாய்வு செய்கிறது...
           </h2>
           <p className="text-sm font-semibold text-teal-700 mt-1">
-            Running PaddleOCR & AI Field Detection...
+            Running Qwen2.5-VL Vision-Language Model Analysis...
           </p>
         </div>
 
@@ -83,7 +83,7 @@ export const AnalysisProgress: React.FC<AnalysisProgressProps> = ({ onComplete }
             />
           </div>
           <div className="flex justify-between text-xs text-gray-400 font-semibold px-1">
-            <span>PaddleOCR Analysis</span>
+            <span>Vision Model Analysis</span>
             <span>{progressPercent}%</span>
           </div>
         </div>
